@@ -1,5 +1,5 @@
 {
-  "name": "populations-models",
+  "name": "connected-bio-populations",
   "dependencies": {
    "pixi.js": "v2.2.9",
    "populations.js": "0.0.17-genetics"

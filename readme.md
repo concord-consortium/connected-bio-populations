@@ -1,9 +1,9 @@
-# [Populations.js Models](https://github.com/concord-consortium/populations-models)
+# [Populations.js Models](https://github.com/concord-consortium/connected-bio-populations)
 
 This repository hosts a collection of models built using [populations.js](https://github.com/concord-consortium/populations.js).
 
 To view the models running, see
-[http://concord-consortium.github.io/populations-models/](http://concord-consortium.github.io/populations-models/)
+[http://concord-consortium.github.io/connected-bio-populations/](http://concord-consortium.github.io/connected-bio-populations/)
 
 ## Running Locally
 
@@ -56,7 +56,7 @@ the server.
 
 ## License
 
-Populations-Models is Copyright 2014 (c) by the Concord Consortium and is distributed under
+Connected-Bio-Populations is Copyright 2014 (c) by the Concord Consortium and is distributed under
 any of the following licenses:
 
 - [Simplified BSD](http://www.opensource.org/licenses/BSD-2-Clause),

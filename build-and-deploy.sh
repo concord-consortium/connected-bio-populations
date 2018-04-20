@@ -29,7 +29,7 @@ git add .
 git commit -m "deploy $COMMIT"
 
 echo "Pushing to gh-pages"
-git push "git@github.com:concord-consortium/populations-models.git" master:gh-pages --force
+git push "git@github.com:concord-consortium/connected-bio-populations.git" master:gh-pages --force
 
 cd ..
 rm -rf tmp
