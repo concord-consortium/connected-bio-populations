@@ -34,7 +34,7 @@ window.model =
         }
         {
           species: hawkSpecies
-          imagePath: "images/agents/hawks/hawk.png"
+          imagePath: "images/agents/owls/owl_button.png"
           traits: [
             new Trait {name: "mating desire bonus", default: -10}
           ]
@@ -232,7 +232,7 @@ window.model =
   preload: [
     "images/agents/grass/tallgrass.png",
     "images/agents/rabbits/rabbit2.png",
-    "images/agents/hawks/hawk.png",
+    "images/agents/owls/owl.png",
     "images/environments/snow.png",
     "images/environments/snow-1.png",
     "images/environments/snow-2.png",

@@ -27,8 +27,8 @@ require.register "species/hawks", (exports, require, module) ->
         rules: [
           {
             image:
-              path: "images/agents/hawks/hawk-small.png"
-              scale: 0.2
+              path: "images/agents/owls/owl.png"
+              scale: 0.15
               anchor:
                 x: 0.5
                 y: 0.2
@@ -36,8 +36,8 @@ require.register "species/hawks", (exports, require, module) ->
           }
           {
             image:
-              path: "images/agents/hawks/hawk.png"
-              scale: 0.2
+              path: "images/agents/owls/owl.png"
+              scale: 0.15
               anchor:
                 x: 0.5
                 y: 0.2
