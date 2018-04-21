@@ -89,6 +89,8 @@ window.model =
     @outputGraph = LabGrapher '#graph', outputOptions
 
     Events.addEventListener Environment.EVENTS.RESET, =>
+      @addedHawks = false
+      @addedRabbits = false
       @outputGraph.reset()
 
     Events.addEventListener Environment.EVENTS.STEP, =>
