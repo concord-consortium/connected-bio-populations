@@ -10,6 +10,7 @@ exports.config =
     stylesheets:
       joinTo:
         'css/vendor.css' : /^(bower_components)/
+        'css/app.css' : /^(interactives)/
 
   conventions:
     assets: /assets(\/|\\)/

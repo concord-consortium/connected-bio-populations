@@ -68,6 +68,7 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
     imageRules: [
       {
         name: 'rabbit'
+        contexts: ['environment','carry-tool']
         rules: [
           {
             image:

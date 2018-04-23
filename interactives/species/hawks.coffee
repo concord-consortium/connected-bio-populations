@@ -1,12 +1,15 @@
 require.register "species/hawks", (exports, require, module) ->
-
   Species = require 'models/species'
   BasicAnimal = require 'models/agents/basic-animal'
   Trait   = require 'models/trait'
 
+  class Hawk extends BasicAnimal
+    canBeCarried: ->
+      false
+
   module.exports = new Species
     speciesName: "hawks"
-    agentClass: BasicAnimal
+    agentClass: Hawk
     defs:
       CHANCE_OF_MUTATION: 0
       INFO_VIEW_SCALE: 1
@@ -24,16 +27,8 @@ require.register "species/hawks", (exports, require, module) ->
     imageRules: [
       {
         name: 'hawk'
+        contexts: ['environment']
         rules: [
-          {
-            image:
-              path: "images/agents/owls/owl.png"
-              scale: 0.15
-              anchor:
-                x: 0.5
-                y: 0.2
-            useIf: (agent)-> agent.get('current behavior') is BasicAnimal.BEHAVIOR.EATING or agent.get('wings') is 1
-          }
           {
             image:
               path: "images/agents/owls/owl.png"

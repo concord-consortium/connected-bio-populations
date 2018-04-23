@@ -15,6 +15,18 @@ rabbitSpecies = require 'species/white-brown-rabbits'
 hawkSpecies   = require 'species/hawks'
 env           = require 'environments/snow'
 
+ToolButton.prototype._states['carry-tool'].mousedown = (evt) ->
+  agent = @getAgentAt(evt.envX, evt.envY)
+  return unless agent?
+  return unless agent.canBeCarried()
+  @pickUpAgent agent
+  @_agent = agent
+  @_origin = {x: evt.envX, y: evt.envY}
+  @_agentOrigin = agent.getLocation()
+
+Agent.prototype.canBeCarried = () ->
+  return true;
+
 window.model =
   brownness: 0
   run: ->
@@ -45,6 +57,9 @@ window.model =
       toolButtons: [
         {
           type: ToolButton.INFO_TOOL
+        },
+        {
+          type: ToolButton.CARRY_TOOL
         }
       ]
 
