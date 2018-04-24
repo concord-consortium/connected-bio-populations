@@ -12,6 +12,23 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
     moveCount: 0
     _hasEatenOnce: 1
 
+    step: ->
+      if @_y < model.env.height/4
+        @set("is immortal", true)
+        @set("min offspring", 2)
+        overcrowded = model.current_counts.lab > 10
+        if overcrowded
+          @set("mating desire bonus", -40)
+        else
+          @set("mating desire bonus", 0)
+        if (@get('age') > 20 and @_timeLastMated > 0 and Math.random() < 0.3)
+          @die()
+        # die when you're fairly old if it's overcrowded
+        if overcrowded and @get('age') > 30 and Math.random() < 0.2
+          @die()
+
+      super()
+
     makeNewborn: ->
       super()
 
@@ -56,8 +73,9 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
       INFO_VIEW_PROPERTIES:
         "Color: ": 'color'
         "Genome: ": 'genome'
+        "Sex: ": 'sex'
     traits: [
-      new Trait {name: 'speed', default: 30 }
+      new Trait {name: 'speed', default: 6 }
       new Trait {name: 'predator', default: [{name: 'hawks'},{name: 'foxes'}] }
       new Trait {name: 'color', possibleValues: [''], isGenetic: true, isNumeric: false }
       new Trait {name: 'vision distance', default: 200 }

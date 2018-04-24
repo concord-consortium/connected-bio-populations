@@ -70,6 +70,12 @@ window.model =
     @hawkSpecies = hawkSpecies
     @rabbitSpecies = rabbitSpecies
 
+    @locations =
+      all: {x: 0, y: 0, width: @env.width, height: @env.height }
+      lab: {x: 0, y: 0, width: @env.width, height: Math.round(@env.height/4) }
+      field: {x: 0, y: Math.round(@env.height/4), width: @env.width, height: Math.round(@env.height/4)*3}
+    @setupEnvironment()
+
     env.addRule new Rule
       action: (agent) =>
         if agent.species is rabbitSpecies
@@ -77,6 +83,15 @@ window.model =
             agent.set 'chance of being seen', (0.6 - (@brownness*0.6))
           else
             agent.set 'chance of being seen', (@brownness*0.6)
+
+    Events.addEventListener Environment.EVENTS.STEP, =>
+      model.countRabbitsInAreas()
+
+  setupEnvironment: ->
+    @current_counts =
+      all: {total: 0}
+      lab: {total: 0}
+      field: {total: 0}
 
   setupGraph: ->
     outputOptions =
@@ -104,6 +119,7 @@ window.model =
     @outputGraph = LabGrapher '#graph', outputOptions
 
     Events.addEventListener Environment.EVENTS.RESET, =>
+      model.setupEnvironment()
       @addedHawks = false
       @addedRabbits = false
       @outputGraph.reset()
@@ -117,10 +133,25 @@ window.model =
       set.push a if a.species is species
     return set
 
+  agentsOfSpeciesInRect: (species, rectangle)->
+    set = []
+    for a in @env.agentsWithin(rectangle)
+      set.push a if a.species is species
+    return set
+
+  countRabbitsInAreas: ->
+      @current_counts.all = @countRabbitsInArea(@locations.all)
+      @current_counts.lab  = @countRabbitsInArea(@locations.lab)
+      @current_counts.field = @countRabbitsInArea(@locations.field)
+
+  countRabbitsInArea: (rectangle) ->
+    rabbits = (a for a in @env.agentsWithin(rectangle) when a.species is @rabbitSpecies)
+    return rabbits.length
+
   countRabbits: ->
     whiteRabbits = 0
     brownRabbits = 0
-    for a in @agentsOfSpecies(@rabbitSpecies)
+    for a in @agentsOfSpeciesInRect(@rabbitSpecies, @locations.lab)
       whiteRabbits++ if a.get('color') is 'white'
       brownRabbits++ if a.get('color') is 'brown'
     return [whiteRabbits, brownRabbits]
@@ -152,19 +183,22 @@ window.model =
     for a in agents
       a.set prop, val
 
-  addAgent: (species, properties=[], traits=[])->
+  addAgent: (species, properties=[], traits=[], location)->
     agent = species.createAgent(traits)
+    # coords = @env.randomLocation()
+    # if location
+    #   coords = @env.randomLocationWithin(location.x, location.y, location.width, location.height, true)
+    # agent.setLocation coords
     agent.setLocation @env.randomLocation()
     for prop in properties
       agent.set prop[0], prop[1]
     @env.addAgent agent
 
-
   addedRabbits: false
   addedHawks: false
   numRabbits: 0
   checkRabbits: ->
-    allRabbits = @agentsOfSpecies(@rabbitSpecies)
+    allRabbits = @agentsOfSpeciesInRect(@rabbitSpecies, @locations.field)
     allPlants  = @agentsOfSpecies(@plantSpecies)
 
     @numRabbits = allRabbits.length
