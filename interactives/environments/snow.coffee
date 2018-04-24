@@ -2,9 +2,9 @@ Environment = require 'models/environment'
 Rule        = require 'models/rule'
 
 env = new Environment
-  columns:  40
-  rows:     40
-  imgPath: "images/environments/lab_small.png"
+  columns:  45
+  rows:     45
+  imgPath: "images/environments/lab_snow.png"
   wrapEastWest: false
   wrapNorthSouth: false
   barriers: [

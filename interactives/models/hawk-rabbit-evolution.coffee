@@ -166,7 +166,7 @@ window.model =
   countRabbits: ->
     whiteRabbits = 0
     brownRabbits = 0
-    for a in @agentsOfSpeciesInRect(@rabbitSpecies, @locations.lab)
+    for a in @agentsOfSpeciesInRect(@rabbitSpecies, @locations.field)
       whiteRabbits++ if a.get('color') is 'white'
       brownRabbits++ if a.get('color') is 'brown'
     return [whiteRabbits, brownRabbits]
@@ -189,10 +189,10 @@ window.model =
     switchButton.onclick = =>
       if @brownness
         @brownness = 0
-        @env.setBackground("images/environments/snow.png")
+        @env.setBackground("images/environments/lab_snow.png")
       else
         @brownness = 1
-        @env.setBackground("images/environments/snow-9.png")
+        @env.setBackground("images/environments/lab_dirt.png")
 
   setProperty: (agents, prop, val)->
     for a in agents
