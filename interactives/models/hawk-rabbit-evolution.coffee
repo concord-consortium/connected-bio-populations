@@ -41,8 +41,8 @@ window.model =
             new Trait {name: "mating desire bonus", default: -20}
             new Trait {name: "age", default: 3}
           ]
-          limit: 30
-          scatter: 30
+          limit: -1
+          scatter: true
         }
         {
           species: hawkSpecies
@@ -50,8 +50,8 @@ window.model =
           traits: [
             new Trait {name: "mating desire bonus", default: -10}
           ]
-          limit: 2
-          scatter: 2
+          limit: -1
+          scatter: true
         }
       ]
       toolButtons: [
@@ -92,6 +92,21 @@ window.model =
       all: {total: 0}
       lab: {total: 0}
       field: {total: 0}
+    buttons = [].slice.call($('.button img'))
+    that = @
+    buttons[0].onclick = () ->
+      for i in [0...30]
+        that.addAgent(rabbitSpecies, [], [
+          new Trait {name: "mating desire bonus", default: -20}
+          new Trait {name: "age", default: 3}
+        ], that.locations.field)
+      buttons[0].onclick = null
+    buttons[1].onclick = () ->
+      for i in [0...2]
+        that.addAgent(hawkSpecies, [], [
+          new Trait {name: "mating desire bonus", default: -10}
+        ], that.locations.field)
+      buttons[1].onclick = null
 
   setupGraph: ->
     outputOptions =
@@ -185,11 +200,10 @@ window.model =
 
   addAgent: (species, properties=[], traits=[], location)->
     agent = species.createAgent(traits)
-    # coords = @env.randomLocation()
-    # if location
-    #   coords = @env.randomLocationWithin(location.x, location.y, location.width, location.height, true)
-    # agent.setLocation coords
-    agent.setLocation @env.randomLocation()
+    coords = @env.randomLocation()
+    if location
+      coords = @env.randomLocationWithin(location.x, location.y, location.width, location.height, true)
+    agent.setLocation coords
     for prop in properties
       agent.set prop[0], prop[1]
     @env.addAgent agent

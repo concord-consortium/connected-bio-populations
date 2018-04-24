@@ -21,8 +21,8 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
           @set("mating desire bonus", -40)
         else
           @set("mating desire bonus", 0)
-        if (@get('age') > 20 and @_timeLastMated > 0 and Math.random() < 0.3)
-          @die()
+        # if (@get('age') > 20 and @_timeLastMated > 0 and Math.random() < 0.3)
+        #   @die()
         # die when you're fairly old if it's overcrowded
         if overcrowded and @get('age') > 30 and Math.random() < 0.2
           @die()
