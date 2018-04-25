@@ -27,6 +27,12 @@ ToolButton.prototype._states['carry-tool'].mousedown = (evt) ->
 Agent.prototype.canBeCarried = () ->
   return true;
 
+Environment.prototype.randomLocationWithin = (left, top, width, height, avoidBarriers=false)->
+  point = {x: ExtMath.randomInt(width)+left, y: ExtMath.randomInt(height)+top}
+  while avoidBarriers and @isInBarrier(point.x, point.y)
+    point = {x: ExtMath.randomInt(width)+left, y: ExtMath.randomInt(height)+top}
+  return point
+
 window.model =
   brownness: 0
   run: ->
@@ -48,7 +54,7 @@ window.model =
           species: hawkSpecies
           imagePath: "images/agents/owls/owl_button.png"
           traits: [
-            new Trait {name: "mating desire bonus", default: -10}
+            new Trait {name: "mating desire bonus", default: -40}
           ]
           limit: -1
           scatter: true
@@ -83,6 +89,22 @@ window.model =
             agent.set 'chance of being seen', (0.6 - (@brownness*0.6))
           else
             agent.set 'chance of being seen', (@brownness*0.6)
+
+    env.addRule new Rule
+      action: (agent) =>
+        if agent.species is rabbitSpecies
+          if agent._y < @env.height/4
+            agent.set("is immortal", true)
+            agent.set("min offspring", 2)
+            overcrowded = @current_counts.lab > 10
+            if overcrowded
+              agent.set("mating desire bonus", -40)
+            else
+              agent.set("mating desire bonus", 0)
+            if overcrowded and agent.get('age') > 30 and Math.random() < 0.2
+              agent.die()
+          else
+            agent.set("is immortal", false)
 
     Events.addEventListener Environment.EVENTS.STEP, =>
       model.countRabbitsInAreas()
@@ -180,7 +202,6 @@ window.model =
 
   setupPopulationControls: ->
     Events.addEventListener Environment.EVENTS.STEP, =>
-      @checkPlants()
       @checkRabbits()
       @checkHawks()
 
@@ -270,29 +291,9 @@ window.model =
     if @addedHawks and @numRabbits > 0 and numHawks < 2
       @addAgent @hawkSpecies
 
-    if numHawks < 3 and @numRabbits > 0
-      @setProperty(allHawks, "is immortal", true)
-      @setProperty(allHawks, "mating desire bonus", -10)
-      @setProperty(allHawks, "hunger bonus", 5)
-    else
-      if allHawks[0].get("is immortal")
-        @setProperty(allHawks, "is immortal", false)
-
-      if numHawks > 4
-        @setProperty(allHawks, "mating desire bonus", -30)
-        @setProperty(allHawks, "hunger bonus", -40)
-      else
-        @setProperty(allHawks, "mating desire bonus", -15)
-        @setProperty(allHawks, "hunger bonus", -5)
-
-  checkPlants: ->
-    allPlants  = @agentsOfSpecies(@plantSpecies)
-    if allPlants.length < 100
-      @setProperty(allPlants, 'growth rate', 0.007)
-    else if allPlants.length < 300
-      @setProperty(allPlants, 'growth rate', 0.0035)
-    else
-      @setProperty(allPlants, 'growth rate', 0.0005)
+    @setProperty(allHawks, "is immortal", true)
+    @setProperty(allHawks, "mating desire bonus", -40)
+    @setProperty(allHawks, "hunger bonus", 5)
 
   preload: [
     "images/agents/grass/tallgrass.png",
