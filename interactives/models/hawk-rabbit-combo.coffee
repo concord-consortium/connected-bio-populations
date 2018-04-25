@@ -27,6 +27,12 @@ ToolButton.prototype._states['carry-tool'].mousedown = (evt) ->
 Agent.prototype.canBeCarried = () ->
   return true;
 
+Environment.prototype.randomLocationWithin = (left, top, width, height, avoidBarriers=false)->
+  point = {x: ExtMath.randomInt(width)+left, y: ExtMath.randomInt(height)+top}
+  while avoidBarriers and @isInBarrier(point.x, point.y)
+    point = {x: ExtMath.randomInt(width)+left, y: ExtMath.randomInt(height)+top}
+  return point
+
 window.model =
   brownness: 0
   run: ->
@@ -116,7 +122,7 @@ window.model =
       ], that.locations.dirt)
       buttons[1].onclick = null
 
-  setupGraph: ->
+  setupGraphs: ->
     outputOptions =
       title:  "Number of rabbits"
       xlabel: "Time (s)"
@@ -140,15 +146,18 @@ window.model =
       ]
 
     @outputGraph = LabGrapher '#graph', outputOptions
+    @outputGraph2 = LabGrapher '#graph2', outputOptions
 
     Events.addEventListener Environment.EVENTS.RESET, =>
       model.setupEnvironment()
       @addedHawks = false
       @addedRabbits = false
       @outputGraph.reset()
+      @outputGraph2.reset()
 
     Events.addEventListener Environment.EVENTS.STEP, =>
-      @outputGraph.addSamples @countRabbits()
+      @outputGraph.addSamples @graphRabbits(@locations.snow)
+      @outputGraph2.addSamples @graphRabbits(@locations.dirt)
 
   agentsOfSpecies: (species)->
     set = []
@@ -173,10 +182,10 @@ window.model =
     rabbits = (a for a in @env.agentsWithin(rectangle) when a.species is @rabbitSpecies)
     return rabbits.length
 
-  countRabbits: ->
+  graphRabbits:(location) ->
     whiteRabbits = 0
     brownRabbits = 0
-    for a in @agentsOfSpeciesInRect(@rabbitSpecies, @locations.all)
+    for a in @agentsOfSpeciesInRect(@rabbitSpecies, location)
       whiteRabbits++ if a.get('color') is 'white'
       brownRabbits++ if a.get('color') is 'brown'
     return [whiteRabbits, brownRabbits]
@@ -285,5 +294,5 @@ window.model =
 window.onload = ->
   helpers.preload [model, env, plantSpecies, rabbitSpecies, hawkSpecies], ->
     model.run()
-    model.setupGraph()
+    model.setupGraphs()
     model.setupPopulationControls()
