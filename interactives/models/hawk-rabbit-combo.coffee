@@ -93,6 +93,23 @@ window.model =
           else
             agent.set 'chance of being seen', (brownness*0.6)
 
+    env.addRule new Rule
+      action: (agent) =>
+        if agent.species is rabbitSpecies
+          if agent._y < @env.height/4
+            agent.set("is immortal", true)
+            agent.set("min offspring", 2)
+            population = if agent._x < @env.width/2 then @current_counts.lab_snow else @current_counts.lab_dirt
+            overcrowded =population > 10
+            if overcrowded
+              agent.set("mating desire bonus", -40)
+            else
+              agent.set("mating desire bonus", 0)
+            if overcrowded and agent.get('age') > 30 and Math.random() < 0.2
+              agent.die()
+          else
+            agent.set("is immortal", false)
+
     Events.addEventListener Environment.EVENTS.STEP, =>
       model.countRabbitsInAreas()
 
