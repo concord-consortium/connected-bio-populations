@@ -19,14 +19,14 @@ html
     style(type="text/css").
       #graph0 {
         position: absolute;
-        top: 525px;
+        top: 550px;
         left: 5px;
         width: 450px;
         height: 300px;
       }
       #graph1 {
         position: absolute;
-        top: 525px;
+        top: 550px;
         left: 470px;
         width: 450px;
         height: 300px;
@@ -39,5 +39,7 @@ html
       % White:
       input#starting-white(value="50")
     #environment
+    #controls(hidden=true)
+      button#switch-env= "Switch Environments"
     #controls
     #below

@@ -40,6 +40,8 @@ window.model =
     envParam = @getURLParam('envs', true)
     @envColors = if envParam then envParam else ['white']
     @switch = @getURLParam('switch') == 'true'
+    if (@switch)
+      document.querySelector("#controls").hidden = false
 
   run: ->
     env = if @envColors.length == 1 then env_single else env_double
@@ -253,6 +255,17 @@ window.model =
   showMessage: (message, callback) ->
     helpers.showMessage message, @env.getView().view.parentElement, callback
 
+  setupControls: ->
+    switchButton = document.getElementById('switch-env')
+    switchButton.onclick = =>
+      if @envColors.length == 1
+        if @envColors[0] == "white"
+          @envColors[0] = "brown"
+          @env.setBackground("images/environments/brown.png")
+        else
+          @envColors[0] = "white"
+          @env.setBackground("images/environments/white.png")
+
   setupPopulationControls: ->
     Events.addEventListener Environment.EVENTS.STEP, =>
       for i in [0...@envColors.length]
@@ -374,4 +387,5 @@ window.onload = ->
     model.checkParams()
     model.run()
     model.setupGraphs()
+    model.setupControls()
     model.setupPopulationControls()
