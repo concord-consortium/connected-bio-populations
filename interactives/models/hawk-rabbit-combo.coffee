@@ -13,7 +13,8 @@ BasicAnimal = require 'models/agents/basic-animal'
 plantSpecies  = require 'species/fast-plants-roots'
 rabbitSpecies = require 'species/white-brown-rabbits'
 hawkSpecies   = require 'species/hawks'
-env           = require 'environments/combo'
+env_single    = require 'environments/snow'
+env_double    = require 'environments/combo'
 
 ToolButton.prototype._states['carry-tool'].mousedown = (evt) ->
   agent = @getAgentAt(evt.envX, evt.envY)
@@ -35,7 +36,13 @@ Environment.prototype.randomLocationWithin = (left, top, width, height, avoidBar
 
 window.model =
   brownness: 0
+  checkParams: ->
+    envParam = @getURLParam('envs', true)
+    @envColors = if envParam then envParam else ['white']
+    @switch = @getURLParam('switch') == 'true'
+
   run: ->
+    env = if @envColors.length == 1 then env_single else env_double
     @interactive = new Interactive
       environment: env
       speedSlider: true
@@ -72,22 +79,35 @@ window.model =
     document.getElementById('environment').appendChild @interactive.getEnvironmentPane()
 
     @env = env
+    @env.setBackground("images/environments/" + @envColors.join("_") + ".png")
     @plantSpecies = plantSpecies
     @hawkSpecies = hawkSpecies
     @rabbitSpecies = rabbitSpecies
 
+    numEnvs = @envColors.length
+    labs = []
+    fields = []
+    for i in [0...numEnvs]
+      x = Math.round((@env.width/numEnvs) * i)
+      labY = 0
+      fieldY = Math.round(@env.height/4)
+      width = Math.round(@env.width/numEnvs)
+      labHeight = Math.round(@env.height/4)
+      fieldHeight = Math.round(@env.height * 3/4)
+      labs.push({x: x, y: labY, width: width, height: labHeight})
+      fields.push({x: x, y: fieldY, width: width, height: fieldHeight})
+
     @locations =
       all: {x: 0, y: 0, width: @env.width, height: @env.height }
-      lab_snow: {x: 0, y: 0, width: Math.round(@env.width/2), height: Math.round(@env.height/4) }
-      snow: {x: 0, y: Math.round(@env.height/4), width: Math.round(@env.width/2), height: Math.round(@env.height/4)*3}
-      lab_dirt: {x: Math.round(@env.width/2), y: 0, width: Math.round(@env.width/2), height: Math.round(@env.height/4) }
-      dirt: {x: Math.round(@env.width/2), y: Math.round(@env.height/4), width: Math.round(@env.width/2), height: Math.round(@env.height/4)*3}
+      labs: labs
+      fields: fields
     @setupEnvironment()
 
     env.addRule new Rule
       action: (agent) =>
         if agent.species is rabbitSpecies
-          brownness = if agent._x < @env.width/2 then 0 else 1
+          envIndex = @getAgentEnvironmentIndex(agent)
+          brownness = @envColors[envIndex] == 'brown'
           if agent.get('color') is 'brown'
             agent.set 'chance of being seen', (0.6 - (brownness*0.6))
           else
@@ -99,7 +119,8 @@ window.model =
           if agent._y < @env.height/4
             agent.set("is immortal", true)
             agent.set("min offspring", 2)
-            population = if agent._x < @env.width/2 then @current_counts.lab_snow else @current_counts.lab_dirt
+            envIndex = @getAgentEnvironmentIndex(agent)
+            population = @countRabbitsInArea(@locations.labs[envIndex])
             overcrowded =population > 10
             if overcrowded
               agent.set("mating desire bonus", -40)
@@ -110,8 +131,8 @@ window.model =
           else
             agent.set("is immortal", false)
 
-    Events.addEventListener Environment.EVENTS.STEP, =>
-      model.countRabbitsInAreas()
+  getAgentEnvironmentIndex: (agent) ->
+    return Math.min(Math.floor((agent._x/@env.width) * @envColors.length), @envColors.length - 1)
 
   setupEnvironment: ->
     @current_counts =
@@ -129,26 +150,40 @@ window.model =
       percentBrown = givenBrown / (givenBrown + givenWhite)
       brownInput.value = Math.round(percentBrown * 100)
       whiteInput.value = Math.round((1 - percentBrown) * 100)
-      for i in [0...30]
-        that.addAgent(rabbitSpecies, [], [
-          new Trait {name: "mating desire bonus", default: -20}
-          new Trait {name: "age", default: 3}
-          that.createRandomColorTrait(percentBrown)
-        ], that.locations.snow)
-        that.addAgent(rabbitSpecies, [], [
-          new Trait {name: "mating desire bonus", default: -20}
-          new Trait {name: "age", default: 3}
-          that.createRandomColorTrait(percentBrown)
-        ], that.locations.dirt)
+      for i in [0...that.envColors.length]
+        for j in [0...30]
+          that.addAgent(rabbitSpecies, [], [
+            new Trait {name: "mating desire bonus", default: -20}
+            new Trait {name: "age", default: 3}
+            that.createRandomColorTrait(percentBrown)
+          ], that.locations.fields[i])
       buttons[0].onclick = null
     buttons[1].onclick = () ->
-      that.addAgents(2, hawkSpecies, [], [
-        new Trait {name: "mating desire bonus", default: -40}
-      ], that.locations.snow)
-      that.addAgents(2, hawkSpecies, [], [
-        new Trait {name: "mating desire bonus", default: -40}
-      ], that.locations.dirt)
+      for i in [0...that.envColors.length]
+        that.addAgents(2, hawkSpecies, [], [
+          new Trait {name: "mating desire bonus", default: -40}
+        ], that.locations.fields[i])
       buttons[1].onclick = null
+
+    Events.addEventListener Environment.EVENTS.RESET, =>
+      model.setupEnvironment()
+      @addedHawks = false
+      @addedRabbits = false
+
+  getURLParam: (key, forceArray) ->
+    query = window.location.search.substring(1)
+    raw_vars = query.split("&")
+
+    for v in raw_vars
+      [paramKey, paramVal] = v.split("=")
+      if paramKey == key
+        value = decodeURIComponent(paramVal).split(',')
+        if value.length == 1 and not forceArray
+          return value[0]
+        else
+          return value
+
+    return null
 
   setupGraphs: ->
     outputOptions =
@@ -173,19 +208,23 @@ window.model =
         [255,   0,   0]
       ]
 
-    @outputGraph = LabGrapher '#graph', outputOptions
-    @outputGraph2 = LabGrapher '#graph2', outputOptions
+    for i in [0...@envColors.length]
+      that = @
+      # Create a closure so all the callbacks use the correct indices
+      do (i) ->
+        div = document.createElement("div")
+        div.className = "graph"
+        graphId = "graph" + i
+        div.id = graphId
+        document.querySelector("#below").appendChild(div)
 
-    Events.addEventListener Environment.EVENTS.RESET, =>
-      model.setupEnvironment()
-      @addedHawks = false
-      @addedRabbits = false
-      @outputGraph.reset()
-      @outputGraph2.reset()
+        graph = LabGrapher ("#" + graphId), outputOptions
 
-    Events.addEventListener Environment.EVENTS.STEP, =>
-      @outputGraph.addSamples @graphRabbits(@locations.snow)
-      @outputGraph2.addSamples @graphRabbits(@locations.dirt)
+        Events.addEventListener Environment.EVENTS.RESET, =>
+          graph.reset()
+
+        Events.addEventListener Environment.EVENTS.STEP, =>
+          graph.addSamples that.graphRabbits(that.locations.fields[i])
 
   agentsOfSpecies: (species)->
     set = []
@@ -198,13 +237,6 @@ window.model =
     for a in @env.agentsWithin(rectangle)
       set.push a if a.species is species
     return set
-
-  countRabbitsInAreas: ->
-      @current_counts.all = @countRabbitsInArea(@locations.all)
-      @current_counts.snow  = @countRabbitsInArea(@locations.snow)
-      @current_counts.dirt = @countRabbitsInArea(@locations.dirt)
-      @current_counts.lab_snow  = @countRabbitsInArea(@locations.lab_snow)
-      @current_counts.lab_dirt = @countRabbitsInArea(@locations.lab_dirt)
 
   countRabbitsInArea: (rectangle) ->
     rabbits = (a for a in @env.agentsWithin(rectangle) when a.species is @rabbitSpecies)
@@ -223,10 +255,9 @@ window.model =
 
   setupPopulationControls: ->
     Events.addEventListener Environment.EVENTS.STEP, =>
-      @checkRabbits(@locations.snow)
-      @checkRabbits(@locations.dirt)
-      @checkHawks(@locations.snow)
-      @checkHawks(@locations.dirt)
+      for i in [0...@envColors.length]
+        @checkRabbits(@locations.fields[i])
+        @checkHawks(@locations.fields[i])
 
   setProperty: (agents, prop, val)->
     for a in agents
@@ -330,11 +361,17 @@ window.model =
     "images/agents/grass/tallgrass.png",
     "images/agents/rabbits/rabbit2.png",
     "images/agents/owls/owl.png",
-    "images/environments/lab_combo.png"
+    "images/environments/white.png",
+    "images/environments/brown.png",
+    "images/environments/brown_brown.png",
+    "images/environments/brown_white.png",
+    "images/environments/white_brown.png",
+    "images/environments/white_white.png"
   ]
 
 window.onload = ->
-  helpers.preload [model, env, plantSpecies, rabbitSpecies, hawkSpecies], ->
+  helpers.preload [model, env_single, env_double, plantSpecies, rabbitSpecies, hawkSpecies], ->
+    model.checkParams()
     model.run()
     model.setupGraphs()
     model.setupPopulationControls()

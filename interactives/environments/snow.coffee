@@ -4,7 +4,7 @@ Rule        = require 'models/rule'
 env = new Environment
   columns:  45
   rows:     45
-  imgPath: "images/environments/lab_snow.png"
+  imgPath: "images/environments/white.png"
   wrapEastWest: false
   wrapNorthSouth: false
   barriers: [
