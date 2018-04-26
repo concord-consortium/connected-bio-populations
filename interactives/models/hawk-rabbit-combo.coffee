@@ -121,14 +121,25 @@ window.model =
     buttons = [].slice.call($('.button img'))
     that = @
     buttons[0].onclick = () ->
-      that.addAgents(30, rabbitSpecies, [], [
-        new Trait {name: "mating desire bonus", default: -20}
-        new Trait {name: "age", default: 3}
-      ], that.locations.snow)
-      that.addAgents(30, rabbitSpecies, [], [
-        new Trait {name: "mating desire bonus", default: -20}
-        new Trait {name: "age", default: 3}
-      ], that.locations.dirt)
+      # Scale assuming sum is 100%
+      whiteInput = $('#starting-white')[0]
+      brownInput = $('#starting-brown')[0]
+      givenWhite = parseFloat(whiteInput.value)
+      givenBrown = parseFloat(brownInput.value)
+      percentBrown = givenBrown / (givenBrown + givenWhite)
+      brownInput.value = Math.round(percentBrown * 100)
+      whiteInput.value = Math.round((1 - percentBrown) * 100)
+      for i in [0...30]
+        that.addAgent(rabbitSpecies, [], [
+          new Trait {name: "mating desire bonus", default: -20}
+          new Trait {name: "age", default: 3}
+          that.createRandomColorTrait(percentBrown)
+        ], that.locations.snow)
+        that.addAgent(rabbitSpecies, [], [
+          new Trait {name: "mating desire bonus", default: -20}
+          new Trait {name: "age", default: 3}
+          that.createRandomColorTrait(percentBrown)
+        ], that.locations.dirt)
       buttons[0].onclick = null
     buttons[1].onclick = () ->
       that.addAgents(2, hawkSpecies, [], [
@@ -255,10 +266,10 @@ window.model =
       @addedRabbits = true
 
     if @addedRabbits and numPlants > 0 and @numRabbits < 9
-      @addAgent(@rabbitSpecies, [], [@getRandomColorTrait(allRabbits)])
-      @addAgent(@rabbitSpecies, [], [@getRandomColorTrait(allRabbits)])
-      @addAgent(@rabbitSpecies, [], [@getRandomColorTrait(allRabbits)])
-      @addAgent(@rabbitSpecies, [], [@getRandomColorTrait(allRabbits)])
+      @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
+      @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
+      @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
+      @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
 
     if @numRabbits < 16
       @setProperty(allRabbits, "min offspring", 2)
@@ -272,9 +283,23 @@ window.model =
       @setProperty(allRabbits, "mating desire bonus", -40)
 
   # Returns a random color trait, selecting from rabbits currently on screen
-  getRandomColorTrait: (allRabbits) ->
+  copyRandomColorTrait: (allRabbits) ->
     randomRabbit = allRabbits[Math.floor(Math.random() * allRabbits.length)]
     alleleString = randomRabbit.organism.alleles
+    return new Trait {name: "color", default: alleleString, isGenetic: true}
+
+  createRandomColorTrait: (percentBrown) ->
+    alleleString = ""
+    if Math.random() < percentBrown
+      genotypeNum = Math.random()
+      if genotypeNum < 1/3
+        alleleString = "a:B,b:b"
+      else if genotypeNum < 2/3
+        alleleString = "a:b,b:B"
+      else
+        alleleString = "a:B,b:B"
+    else
+      alleleString = "a:b,b:b"
     return new Trait {name: "color", default: alleleString, isGenetic: true}
 
   checkHawks: (location)->
