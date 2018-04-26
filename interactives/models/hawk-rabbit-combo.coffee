@@ -14,6 +14,7 @@ plantSpecies  = require 'species/fast-plants-roots'
 rabbitSpecies = require 'species/white-brown-rabbits'
 hawkSpecies   = require 'species/hawks'
 env           = require 'environments/combo'
+getURLParams  = require 'utils/getURLParams'
 
 ToolButton.prototype._states['carry-tool'].mousedown = (evt) ->
   agent = @getAgentAt(evt.envX, evt.envY)
@@ -114,6 +115,7 @@ window.model =
       model.countRabbitsInAreas()
 
   setupEnvironment: ->
+    console.log(getURLParams('color'))
     @current_counts =
       all: {total: 0}
       lab: {total: 0}
@@ -334,7 +336,7 @@ window.model =
   ]
 
 window.onload = ->
-  helpers.preload [model, env, plantSpecies, rabbitSpecies, hawkSpecies], ->
+  helpers.preload [model, env, plantSpecies, rabbitSpecies, hawkSpecies, getURLParams], ->
     model.run()
     model.setupGraphs()
     model.setupPopulationControls()
