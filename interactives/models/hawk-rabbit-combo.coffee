@@ -45,8 +45,13 @@ window.model =
       document.querySelector("#controls").hidden = false
 
     @popControl = @getURLParam('popControl')
+    controlTypeParam = @getURLParam('controlType')
+    @controlType = if controlTypeParam then controlTypeParam else 'color'
     if (@popControl == "user")
-      document.querySelector("#pop-controls").hidden = false
+      if (@controlType == "color")
+        document.querySelector("#color-controls").hidden = false
+      else
+        document.querySelector("#genome-controls").hidden = false
 
   run: ->
     env = if @envColors.length == 1 then env_single else env_double
@@ -173,22 +178,45 @@ window.model =
 
   getStartingColors: (num) ->
     colors = []
-    percentBrown
-    if (@popControl == "user")
-      # Scale the inputs assuming sum is 100%
-      whiteInput = $('#starting-white')[0]
-      brownInput = $('#starting-brown')[0]
-      givenWhite = parseFloat(whiteInput.value)
-      givenBrown = parseFloat(brownInput.value)
-      percentBrown = givenBrown / (givenBrown + givenWhite)
-      brownInput.value = Math.round(percentBrown * 100)
-      whiteInput.value = Math.round((1 - percentBrown) * 100)
-    else
-      brownParam = @getURLParam("percentBrown")
-      percentBrown = if brownParam then parseInt(brownParam) / 100 else .75
 
-    for i in [0...num]
-      colors.push(@createRandomColorTrait(percentBrown))
+    if (@controlType == "color")
+      percentBrown
+      if (@popControl == "user")
+        # Scale the inputs assuming sum is 100%
+        whiteInput = $('#starting-white')[0]
+        brownInput = $('#starting-brown')[0]
+        givenWhite = parseFloat(whiteInput.value)
+        givenBrown = parseFloat(brownInput.value)
+        percentBrown = givenBrown / (givenBrown + givenWhite)
+        brownInput.value = Math.round(percentBrown * 100)
+        whiteInput.value = Math.round((1 - percentBrown) * 100)
+      else
+        brownParam = @getURLParam("percentBrown")
+        percentBrown = if brownParam then parseInt(brownParam) / 100 else .75
+      for i in [0...num]
+        colors.push(@createRandomColorTraitByPhenotype(percentBrown))
+    else
+      percentBB
+      percentBb
+      if (@popControl == "user")
+        inputBB = $('#starting-BB')[0]
+        inputBb = $('#starting-Bb')[0]
+        inputbb = $('#starting-bb')[0]
+        givenBB = parseFloat(inputBB.value)
+        givenBb = parseFloat(inputBb.value)
+        givenbb = parseFloat(inputbb.value)
+        percentBB = givenBB / (givenBB + givenBb + givenbb)
+        percentBb = givenBb / (givenBB + givenBb + givenbb)
+        inputBB.value = Math.round(percentBB * 100)
+        inputBb.value = Math.round(percentBb * 100)
+        inputbb.value = Math.round((1 - (percentBB + percentBb)) * 100)
+      else
+        BBParam = @getURLParam("percentBB")
+        percentBB = if BBParam then parseInt(BBParam) / 100 else .38
+        BbParam = @getURLParam("percentBB")
+        percentBb = if BbParam then parseInt(BbParam) / 100 else .38
+      for i in [0...num]
+        colors.push(@createRandomColorTraitByGenotype(percentBB, percentBb))
 
     return colors
 
@@ -352,18 +380,33 @@ window.model =
     alleleString = randomRabbit.organism.alleles
     return new Trait {name: "color", default: alleleString, isGenetic: true}
 
-  createRandomColorTrait: (percentBrown) ->
+  createRandomColorTraitByPhenotype: (percentBrown) ->
     alleleString = ""
     if Math.random() < percentBrown
-      genotypeNum = Math.random()
-      if genotypeNum < 1/3
+      rand = Math.random()
+      if rand < 1/3
         alleleString = "a:B,b:b"
-      else if genotypeNum < 2/3
+      else if rand < 2/3
         alleleString = "a:b,b:B"
       else
         alleleString = "a:B,b:B"
     else
       alleleString = "a:b,b:b"
+    return new Trait {name: "color", default: alleleString, isGenetic: true}
+
+  createRandomColorTraitByGenotype: (percentBB, percentBb) ->
+    alleleString = ""
+    rand = Math.random()
+    if rand < percentBB
+      alleleString = "a:B,b:B"
+    else if rand < percentBB + percentBb
+      if Math.random() < .5
+        alleleString = "a:B,b:b"
+      else
+        alleleString = "a:b,b:B"
+    else
+      alleleString = "a:b,b:b"
+
     return new Trait {name: "color", default: alleleString, isGenetic: true}
 
   checkHawks: (location)->

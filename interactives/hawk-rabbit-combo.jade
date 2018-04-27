@@ -33,11 +33,18 @@ html
       }
 
   body
-    #pop-controls(hidden=true)
+    #color-controls(hidden=true)
       % Brown:
       input#starting-brown(value="50")
       % White:
       input#starting-white(value="50")
+    #genome-controls(hidden=true)
+      % BB:
+      input#starting-BB(value="25")
+      % Bb:
+      input#starting-Bb(value="25")
+      % bb:
+      input#starting-bb(value="50")
     #environment
     #controls(hidden=true)
       button#switch-env= "Switch Environments"
