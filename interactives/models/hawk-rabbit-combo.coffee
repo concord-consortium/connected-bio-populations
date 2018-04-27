@@ -39,9 +39,14 @@ window.model =
   checkParams: ->
     envParam = @getURLParam('envs', true)
     @envColors = if envParam then envParam else ['white']
+
     @switch = @getURLParam('switch') == 'true'
     if (@switch)
       document.querySelector("#controls").hidden = false
+
+    @popControl = @getURLParam('popControl')
+    if (@popControl == "user")
+      document.querySelector("#pop-controls").hidden = false
 
   run: ->
     env = if @envColors.length == 1 then env_single else env_double
@@ -142,22 +147,16 @@ window.model =
       lab: {total: 0}
       field: {total: 0}
     buttons = [].slice.call($('.button img'))
+    numMice = 30
     that = @
     buttons[0].onclick = () ->
-      # Scale assuming sum is 100%
-      whiteInput = $('#starting-white')[0]
-      brownInput = $('#starting-brown')[0]
-      givenWhite = parseFloat(whiteInput.value)
-      givenBrown = parseFloat(brownInput.value)
-      percentBrown = givenBrown / (givenBrown + givenWhite)
-      brownInput.value = Math.round(percentBrown * 100)
-      whiteInput.value = Math.round((1 - percentBrown) * 100)
+      colors = that.getStartingColors(numMice)
       for i in [0...that.envColors.length]
-        for j in [0...30]
+        for j in [0...numMice]
           that.addAgent(rabbitSpecies, [], [
             new Trait {name: "mating desire bonus", default: -20}
             new Trait {name: "age", default: 3}
-            that.createRandomColorTrait(percentBrown)
+            colors[j]
           ], that.locations.fields[i])
       buttons[0].onclick = null
     buttons[1].onclick = () ->
@@ -171,6 +170,27 @@ window.model =
       model.setupEnvironment()
       @addedHawks = false
       @addedRabbits = false
+
+  getStartingColors: (num) ->
+    colors = []
+    percentBrown
+    if (@popControl == "user")
+      # Scale the inputs assuming sum is 100%
+      whiteInput = $('#starting-white')[0]
+      brownInput = $('#starting-brown')[0]
+      givenWhite = parseFloat(whiteInput.value)
+      givenBrown = parseFloat(brownInput.value)
+      percentBrown = givenBrown / (givenBrown + givenWhite)
+      brownInput.value = Math.round(percentBrown * 100)
+      whiteInput.value = Math.round((1 - percentBrown) * 100)
+    else
+      brownParam = @getURLParam("percentBrown")
+      percentBrown = if brownParam then parseInt(brownParam) / 100 else .75
+
+    for i in [0...num]
+      colors.push(@createRandomColorTrait(percentBrown))
+
+    return colors
 
   getURLParam: (key, forceArray) ->
     query = window.location.search.substring(1)
