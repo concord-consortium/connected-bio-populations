@@ -42,7 +42,7 @@ window.model =
 
     @switch = @getURLParam('switch') == 'true'
     if (@switch)
-      document.querySelector("#controls").hidden = false
+      document.querySelector("#switch-controls").hidden = false
 
     @popControl = @getURLParam('popControl')
     controlTypeParam = @getURLParam('controlType')
@@ -313,6 +313,11 @@ window.model =
         else
           @envColors[0] = "white"
           @env.setBackground("images/environments/white.png")
+
+    document.getElementById('view-sex-check').onclick = =>
+      model.showSex = document.querySelector('#view-sex-check:checked')
+    document.getElementById('view-hetero-check').onclick = =>
+      model.showHetero = document.querySelector('#view-hetero-check:checked')
 
   setupPopulationControls: ->
     Events.addEventListener Environment.EVENTS.STEP, =>

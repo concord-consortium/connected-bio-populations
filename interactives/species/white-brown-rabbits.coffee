@@ -91,4 +91,43 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
           }
         ]
       }
+      {
+        name: 'sex'
+        contexts: ['environment']
+        rules: [
+          {
+            image:
+              path: "images/overlays/male-stack.png"
+              scale: 0.4
+              anchor:
+                x: 0.75
+                y: 0.5
+            useIf: (agent)-> model.showSex and agent.get('sex') is 'male'
+          }
+          {
+            image:
+              path: "images/overlays/female-stack.png"
+              scale: 0.4
+              anchor:
+                x: 0.75
+                y: 0.5
+            useIf: (agent)-> model.showSex and agent.get('sex') is 'female'
+          }
+        ]
+      }
+      {
+        name: 'genotype'
+        contexts: ['environment']
+        rules: [
+          {
+            image:
+              path: "images/overlays/heterozygous-stack.png"
+              scale: 0.4
+              anchor:
+                x: 0.75
+                y: 0.5
+            useIf: (agent)-> model.showHetero and (agent.alleles.color is 'a:B,b:b' or agent.alleles.color is 'a:b,B:B')
+          }
+        ]
+      }
     ]

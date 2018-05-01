@@ -46,7 +46,12 @@ html
       % bb:
       input#starting-bb(value="50")
     #environment
-    #controls(hidden=true)
-      button#switch-env= "Switch Environments"
-    #controls
+    #env-controls
+      #switch-controls(hidden=true)
+        button#switch-env= "Switch Environments"
+      #overlay-controls
+        input#view-sex-check(type="checkbox")
+        | Show males and females
+        input#view-hetero-check(type="checkbox")
+        | Show heterozygotes
     #below
