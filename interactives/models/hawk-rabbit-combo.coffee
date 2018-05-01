@@ -318,6 +318,7 @@ window.model =
       model.showSex = document.querySelector('#view-sex-check:checked')
     document.getElementById('view-hetero-check').onclick = =>
       model.showHetero = document.querySelector('#view-hetero-check:checked')
+    document.getElementById("env-controls").style.width = @envColors.length * 450 + 68 + "px"
 
   setupPopulationControls: ->
     Events.addEventListener Environment.EVENTS.STEP, =>
