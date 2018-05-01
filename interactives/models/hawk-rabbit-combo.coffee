@@ -240,8 +240,6 @@ window.model =
       title:  "Number of rabbits"
       xlabel: "Time (s)"
       ylabel: "Number of rabbits"
-      xmax:   100
-      xmin:   0
       ymax:   50
       ymin:   0
       xTickCount: 10
