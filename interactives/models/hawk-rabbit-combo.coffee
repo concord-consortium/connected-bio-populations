@@ -240,6 +240,8 @@ window.model =
       title:  "Number of rabbits"
       xlabel: "Time (s)"
       ylabel: "Number of rabbits"
+      xmin: 0
+      xmax: 10
       ymax:   50
       ymin:   0
       xTickCount: 10
@@ -273,6 +275,11 @@ window.model =
 
         Events.addEventListener Environment.EVENTS.STEP, =>
           graph.addSamples that.graphRabbits(that.locations.fields[i])
+          # Pan the graph window every 10 seconds
+          pointsPerWindow = (10 * 1000) / Environment.DEFAULT_RUN_LOOP_DELAY
+          windowNum = Math.floor(graph.numberOfPoints() / pointsPerWindow)
+          graph.xmin(windowNum * 10)
+          graph.xmax(graph.xmin() + 10)
 
   agentsOfSpecies: (species)->
     set = []
