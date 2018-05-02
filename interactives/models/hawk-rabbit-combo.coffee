@@ -236,8 +236,9 @@ window.model =
     return null
 
   setupGraphs: ->
-    @createGraphForEnvs(
-      "Number of Rats", 
+    graphs = []
+    graphs = graphs.concat(@createGraphForEnvs(
+      "Rat Colors", 
       "Time (s)",
       "Number of Rats",
       [
@@ -250,10 +251,10 @@ window.model =
       ]
       "color-graph",
       @graphRabbitColors
-    )
+    ))
 
-    @createGraphForEnvs(
-      "Number of Rats", 
+    graphs = graphs.concat(@createGraphForEnvs(
+      "Rat Genotypes", 
       "Time (s)",
       "Number of Rats",
       [
@@ -268,21 +269,49 @@ window.model =
       ]
       "genotype-graph",
       @graphRabbitGenotypes
-    )
+    ))
+
+    graphs = graphs.concat(@createGraphForEnvs(
+      "Rat Alleles", 
+      "Time (s)",
+      "Number of Alleles",
+      [
+        [153, 153, 153]
+        [153,  85,   0]
+      ]
+      [
+        "b alleles",
+        "B alleles"
+      ]
+      "allele-graph",
+      @graphRabbitAlleles
+    ))
 
     colorGraphs = Array.prototype.slice.call(document.querySelectorAll(".color-graph"))
     genotypeGraphs = Array.prototype.slice.call(document.querySelectorAll(".genotype-graph"))
+    alleleGraphs = Array.prototype.slice.call(document.querySelectorAll(".allele-graph"))
     # Hide all but the default color graphs
     that = @
     genotypeGraphs.forEach((graph) => that.setElementVisible(graph, false))
+    alleleGraphs.forEach((graph) => that.setElementVisible(graph, false))
 
     document.getElementById('graph-colors').onclick = =>
       colorGraphs.forEach((graph) => that.setElementVisible(graph, true))
       genotypeGraphs.forEach((graph) => that.setElementVisible(graph, false))
+      alleleGraphs.forEach((graph) => that.setElementVisible(graph, false))
+      graphs.forEach((graph) => graph.repaint())
 
     document.getElementById('graph-genotypes').onclick = =>
       genotypeGraphs.forEach((graph) => that.setElementVisible(graph, true))
       colorGraphs.forEach((graph) => that.setElementVisible(graph, false))
+      alleleGraphs.forEach((graph) => that.setElementVisible(graph, false))
+      graphs.forEach((graph) => graph.repaint())
+
+    document.getElementById('graph-alleles').onclick = =>
+      alleleGraphs.forEach((graph) => that.setElementVisible(graph, true))
+      colorGraphs.forEach((graph) => that.setElementVisible(graph, false))
+      genotypeGraphs.forEach((graph) => that.setElementVisible(graph, false))
+      graphs.forEach((graph) => graph.repaint())
 
   setElementVisible: (elem, visible) ->
     elem.style.display = if visible then "block" else "none"
@@ -306,6 +335,7 @@ window.model =
       dataType: 'samples'
       dataColors: colors
 
+    graphs = []
     for i in [0...@envColors.length]
       that = @
       # Create a closure so all the callbacks use the correct indices
@@ -317,6 +347,7 @@ window.model =
         document.querySelector("#graphs").appendChild(div)
 
         graph = LabGrapher ("#" + fullId), outputOptions
+        graphs.push(graph)
 
         seriesNames.forEach((series, i) =>
           seriesText = document.createTextNode(series)
@@ -339,6 +370,7 @@ window.model =
           windowNum = Math.floor(graph.numberOfPoints() / pointsPerWindow)
           graph.xmin(windowNum * 10)
           graph.xmax(graph.xmin() + 10)
+    return graphs
 
   agentsOfSpecies: (species)->
     set = []
@@ -374,6 +406,14 @@ window.model =
       bB++ if a.alleles.color is "a:B,b:b"
       BB++ if a.alleles.color is "a:B,b:B"
     return [bb, bB, BB]
+
+  graphRabbitAlleles:(location) ->
+    count_b = 0
+    count_B = 0
+    for a in @agentsOfSpeciesInRect(@rabbitSpecies, location)
+      if a.alleles.color.indexOf("a:b") > -1 then count_b++ else count_B++
+      if a.alleles.color.indexOf("b:b") > -1 then count_b++ else count_B++
+    return [count_b, count_B]
 
   showMessage: (message, callback) ->
     helpers.showMessage message, @env.getView().view.parentElement, callback
