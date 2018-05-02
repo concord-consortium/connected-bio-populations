@@ -5,6 +5,7 @@ require.register "species/hawks", (exports, require, module) ->
 
   class Hawk extends BasicAnimal
     _viewLayer: 3
+    label: 'Hawk'
 
     canBeCarried: ->
       false
@@ -33,7 +34,7 @@ require.register "species/hawks", (exports, require, module) ->
         rules: [
           {
             image:
-              path: "images/agents/owls/owl.png"
+              path: "images/agents/hawks/hawk.png"
               scale: 0.15
               anchor:
                 x: 0.5
