@@ -340,11 +340,15 @@ window.model =
       that = @
       # Create a closure so all the callbacks use the correct indices
       do (i) ->
-        div = document.createElement("div")
-        div.className = graphId + " graph stat-graph"
-        fullId = graphId + i
-        div.id = fullId
-        document.querySelector("#graphs").appendChild(div)
+        containerDiv = document.createElement("div")
+        containerDiv.className = "graph-container " + graphId
+        document.querySelector("#graphs").appendChild(containerDiv)
+
+        graphDiv = document.createElement("div")
+        graphDiv.className = "graph stat-graph"
+        fullId = graphId + "-" + i
+        graphDiv.id = fullId
+        containerDiv.appendChild(graphDiv)
 
         graph = LabGrapher ("#" + fullId), outputOptions
         graphs.push(graph)
@@ -355,7 +359,7 @@ window.model =
           seriesDiv.className = "legend"
           seriesDiv.style.color = "rgb( " + colors[i].join(",") + ")"
           seriesDiv.appendChild(seriesText)
-          div.appendChild(seriesDiv)
+          containerDiv.appendChild(seriesDiv)
         )
 
         Events.addEventListener Environment.EVENTS.RESET, =>
