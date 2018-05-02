@@ -236,10 +236,62 @@ window.model =
     return null
 
   setupGraphs: ->
+    @createGraphForEnvs(
+      "Number of Rats", 
+      "Time (s)",
+      "Number of Rats",
+      [
+        [153, 153, 153]
+        [153,  85,   0]
+      ]
+      [
+        "Light rats",
+        "Dark rats"
+      ]
+      "color-graph",
+      @graphRabbitColors
+    )
+
+    @createGraphForEnvs(
+      "Number of Rats", 
+      "Time (s)",
+      "Number of Rats",
+      [
+        [242, 203, 124] #bb
+        [170, 170, 170] #bB
+        [85, 85, 85] #BB
+      ],
+      [
+        "bb rats",
+        "bB rats",
+        "BB rats"
+      ]
+      "genotype-graph",
+      @graphRabbitGenotypes
+    )
+
+    colorGraphs = Array.prototype.slice.call(document.querySelectorAll(".color-graph"))
+    genotypeGraphs = Array.prototype.slice.call(document.querySelectorAll(".genotype-graph"))
+    # Hide all but the default color graphs
+    that = @
+    genotypeGraphs.forEach((graph) => that.setElementVisible(graph, false))
+
+    document.getElementById('graph-colors').onclick = =>
+      colorGraphs.forEach((graph) => that.setElementVisible(graph, true))
+      genotypeGraphs.forEach((graph) => that.setElementVisible(graph, false))
+
+    document.getElementById('graph-genotypes').onclick = =>
+      genotypeGraphs.forEach((graph) => that.setElementVisible(graph, true))
+      colorGraphs.forEach((graph) => that.setElementVisible(graph, false))
+
+  setElementVisible: (elem, visible) ->
+    elem.style.display = if visible then "block" else "none"
+
+  createGraphForEnvs: (title, xLabel, yLabel, colors, seriesNames, graphId, counter)->
     outputOptions =
-      title:  "Number of rabbits"
-      xlabel: "Time (s)"
-      ylabel: "Number of rabbits"
+      title:  title
+      xlabel: xLabel
+      ylabel: yLabel
       xmin: 0
       xmax: 10
       ymax:   50
@@ -252,29 +304,36 @@ window.model =
       fontScaleRelativeToParent: true
       sampleInterval: (Environment.DEFAULT_RUN_LOOP_DELAY/1000)
       dataType: 'samples'
-      dataColors: [
-        [153, 153, 153]
-        [153,  85,   0]
-        [255,   0,   0]
-      ]
+      dataColors: colors
 
     for i in [0...@envColors.length]
       that = @
       # Create a closure so all the callbacks use the correct indices
       do (i) ->
         div = document.createElement("div")
-        div.className = "graph"
-        graphId = "graph" + i
-        div.id = graphId
-        document.querySelector("#below").appendChild(div)
+        div.className = graphId + " graph stat-graph"
+        fullId = graphId + i
+        div.id = fullId
+        document.querySelector("#graphs").appendChild(div)
 
-        graph = LabGrapher ("#" + graphId), outputOptions
+        graph = LabGrapher ("#" + fullId), outputOptions
+
+        seriesNames.forEach((series, i) =>
+          seriesText = document.createTextNode(series)
+          seriesDiv = document.createElement("div")
+          seriesDiv.className = "legend"
+          seriesDiv.style.color = "rgb( " + colors[i].join(",") + ")"
+          seriesDiv.appendChild(seriesText)
+          div.appendChild(seriesDiv)
+        )
 
         Events.addEventListener Environment.EVENTS.RESET, =>
           graph.reset()
+          graph.xmin(0)
+          graph.xmax(10)
 
         Events.addEventListener Environment.EVENTS.STEP, =>
-          graph.addSamples that.graphRabbits(that.locations.fields[i])
+          graph.addSamples counter.call(that, that.locations.fields[i])
           # Pan the graph window every 10 seconds
           pointsPerWindow = (10 * 1000) / Environment.DEFAULT_RUN_LOOP_DELAY
           windowNum = Math.floor(graph.numberOfPoints() / pointsPerWindow)
@@ -297,13 +356,24 @@ window.model =
     rabbits = (a for a in @env.agentsWithin(rectangle) when a.species is @rabbitSpecies)
     return rabbits.length
 
-  graphRabbits:(location) ->
+  graphRabbitColors:(location) ->
     whiteRabbits = 0
     brownRabbits = 0
     for a in @agentsOfSpeciesInRect(@rabbitSpecies, location)
       whiteRabbits++ if a.get('color') is 'white'
       brownRabbits++ if a.get('color') is 'brown'
     return [whiteRabbits, brownRabbits]
+
+  graphRabbitGenotypes:(location) ->
+    bb = 0
+    bB = 0
+    BB = 0
+    for a in @agentsOfSpeciesInRect(@rabbitSpecies, location)
+      bb++ if a.alleles.color is "a:b,b:b"
+      bB++ if a.alleles.color is "a:b,b:B"
+      bB++ if a.alleles.color is "a:B,b:b"
+      BB++ if a.alleles.color is "a:B,b:B"
+    return [bb, bB, BB]
 
   showMessage: (message, callback) ->
     helpers.showMessage message, @env.getView().view.parentElement, callback

@@ -16,22 +16,6 @@ html
     +script(src="environments/combo.js")
     +script(src="models/hawk-rabbit-combo.js")
 
-    style(type="text/css").
-      #graph0 {
-        position: absolute;
-        top: 550px;
-        left: 5px;
-        width: 450px;
-        height: 300px;
-      }
-      #graph1 {
-        position: absolute;
-        top: 550px;
-        left: 470px;
-        width: 450px;
-        height: 300px;
-      }
-
   body
     #color-controls(hidden=true)
       % Brown:
@@ -56,4 +40,7 @@ html
         input#view-hetero-check(type="checkbox")
         | Show heterozygotes
         img(class="overlay-icon" src="images/overlays/heterozygous-icon.png")
-    #below
+    #graph-controls
+      button#graph-colors= "Graph colors"
+      button#graph-genotypes= "Graph genotypes"
+    #graphs

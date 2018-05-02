@@ -23,3 +23,20 @@ background-image: url("data:image/gif;base64,R0lGODlhHQAgAPcAAAAAAP///wMDAgICAAQ
   margin-left: 4px;
   position: relative;
 }
+
+#graphs {
+  position: relative;
+  top: 10px;
+  display: flex;
+  width: 500%;
+}
+
+.graph.stat-graph {
+  margin-right: 15px;
+  width: 450px;
+  height: 300px;
+}
+
+.legend {
+  text-align: center;
+}
