@@ -318,8 +318,8 @@ window.model =
       title:  title
       xlabel: xLabel
       ylabel: yLabel
-      xmin: -5
-      xmax: 5
+      xmin: 0
+      xmax: 10
       ymax:   100
       ymin:   0
       xTickCount: 10
@@ -364,8 +364,9 @@ window.model =
         updateWindow = (graph) =>
           # Pan the graph window every 5 seconds
           pointsPerWindow = (5 * 1000) / Environment.DEFAULT_RUN_LOOP_DELAY
-          windowNum = Math.floor(graph.numberOfPoints() / pointsPerWindow)
-          graph.xmin(windowNum * 5 - 5)
+          # Subtract 1 from the window since the first scroll isn't actually till 10 seconds
+          windowNum = Math.max(0, Math.floor(graph.numberOfPoints() / pointsPerWindow) - 1)
+          graph.xmin(windowNum * 5)
           graph.xmax(graph.xmin() + 10)
           graph.ymin(0)
           graph.ymax(100)
