@@ -4,6 +4,8 @@ require.register "species/hawks", (exports, require, module) ->
   Trait   = require 'models/trait'
 
   class Hawk extends BasicAnimal
+    _viewLayer: 3
+
     canBeCarried: ->
       false
 
