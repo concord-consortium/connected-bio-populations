@@ -238,41 +238,41 @@ window.model =
   setupGraphs: ->
     graphs = []
     graphs = graphs.concat(@createGraphForEnvs(
-      "Rat Colors", 
+      "Mouse Colors", 
       "Time (s)",
-      "Number of Rats",
+      "Number of Mice",
       [
         [153, 153, 153]
         [153,  85,   0]
       ]
       [
-        "Light rats",
-        "Dark rats"
+        "Light mice",
+        "Dark mice"
       ]
       "color-graph",
       @graphRabbitColors
     ))
 
     graphs = graphs.concat(@createGraphForEnvs(
-      "Rat Genotypes", 
+      "Mouse Genotypes", 
       "Time (s)",
-      "Number of Rats",
+      "Number of Mice",
       [
         [242, 203, 124] #bb
         [170, 170, 170] #bB
         [85, 85, 85] #BB
       ],
       [
-        "bb rats",
-        "bB rats",
-        "BB rats"
+        "bb mice",
+        "bB mice",
+        "BB mice"
       ]
       "genotype-graph",
       @graphRabbitGenotypes
     ))
 
     graphs = graphs.concat(@createGraphForEnvs(
-      "Rat Alleles", 
+      "Mouse Alleles", 
       "Time (s)",
       "Number of Alleles",
       [

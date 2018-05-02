@@ -7,7 +7,7 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
   biologicaSpecies = require 'species/biologica/rabbits'
 
   class Rabbit extends BasicAnimal
-    label: 'Rabbit'
+    label: 'Mouse'
     moving: false
     moveCount: 0
     _hasEatenOnce: 1
