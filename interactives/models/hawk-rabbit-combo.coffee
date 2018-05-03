@@ -452,11 +452,37 @@ window.model =
       model.showHetero = document.querySelector('#view-hetero-check:checked')
     document.getElementById("env-controls").style.width = @envColors.length * 450 + 68 + "px"
 
+    document.querySelector(".toolbar").style.left = @envColors.length * 450 + 10 + "px"
+
   setupPopulationControls: ->
     Events.addEventListener Environment.EVENTS.STEP, =>
       for i in [0...@envColors.length]
         @checkRabbits(@locations.fields[i])
         @checkHawks(@locations.fields[i])
+
+  setupScaling: ->
+    body = document.querySelector("body")
+    baseSize = {
+      w: @envColors.length * 450 + 100
+      h: 910    
+    }
+
+    updateScale = ()->
+      ww = window.innerWidth
+      wh = window.innerHeight
+      newScale = 1
+      
+      # compare ratios
+      if (ww/wh < baseSize.w/baseSize.h) 
+        newScale = ww / baseSize.w  #tall ratio
+      else 
+        newScale = wh / baseSize.h  # wide ratio   
+      
+      newScale = Math.min(newScale, 1)
+      body.style.transform = 'scale(' + newScale + ',' +  newScale + ')'
+
+    updateScale()
+    window.addEventListener("resize", updateScale)
 
   setProperty: (agents, prop, val)->
     for a in agents
@@ -583,3 +609,4 @@ window.onload = ->
     model.setupGraphs()
     model.setupControls()
     model.setupPopulationControls()
+    model.setupScaling()
