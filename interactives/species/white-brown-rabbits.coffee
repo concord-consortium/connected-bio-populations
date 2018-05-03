@@ -9,8 +9,17 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
   class Rabbit extends BasicAnimal
     label: 'Mouse'
     moving: false
-    moveCount: 0
-    _hasEatenOnce: 1
+
+    step: ->
+      @_closestAgents = null
+      @_setSpeedAppropriateForAge()
+      @_depleteEnergy()
+      if (@get('age') > @species.defs.MATURITY_AGE && Math.random() < @get('mating chance'))
+        this.mate()
+      else
+        this.wander()
+      this._incrementAge();
+      return this._checkSurvival();
 
     makeNewborn: ->
       super()
@@ -27,12 +36,8 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
       if nearest?
         @chase(nearest)
         if nearest.distanceSq < Math.pow(@get('mating distance'), 2) and (not @species.defs.CHANCE_OF_MATING? or Math.random() < @species.defs.CHANCE_OF_MATING)
-          max = @get('max offspring')
-          @set 'max offspring', Math.max(max/2, 1)
           @reproduce(nearest.agent)
-          @set 'max offspring', max
-          @_timeLastMated = @environment.date
-          nearest.agent._timeLastMated = @environment.date          # ADDED THIS LINE
+          @set 'max offspring', 0 # Each rabbit just reproduces once in its life
       else
         @wander(@get('speed') * Math.random() * 0.75)
 
@@ -58,12 +63,13 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
         "Genome: ": 'genome'
         "Sex: ": 'sex'
     traits: [
-      new Trait {name: 'speed', default: 6 }
+      new Trait {name: 'speed', default: 60 }
       new Trait {name: 'predator', default: [{name: 'hawks'},{name: 'foxes'}] }
       new Trait {name: 'color', possibleValues: [''], isGenetic: true, isNumeric: false }
       new Trait {name: 'vision distance', default: 200 }
       new Trait {name: 'mating distance', default:  50 }
-      new Trait {name: 'max offspring',   default:  6 }
+      new Trait {name: 'max offspring',   default:  3 }
+      new Trait {name: 'min offspring',   default:  2 }
       new Trait {name: 'metabolism', default: 0 }
     ]
     imageRules: [

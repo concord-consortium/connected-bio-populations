@@ -160,7 +160,7 @@ window.model =
         for j in [0...numMice]
           that.addAgent(rabbitSpecies, [], [
             new Trait {name: "mating desire bonus", default: -20}
-            new Trait {name: "age", default: 3}
+            new Trait {name: "age", default: Math.round(Math.random() * 5)}
             colors[j]
           ], that.locations.fields[i])
       buttons[0].onclick = null
@@ -382,7 +382,7 @@ window.model =
 
         Events.addEventListener Environment.EVENTS.RESET, =>
           graph.reset()
-          graph.updateWindow()
+          updateWindow(graph)
 
         Events.addEventListener Environment.EVENTS.STEP, =>
           graph.addSamples counter.call(that, that.locations.fields[i])
@@ -495,22 +495,15 @@ window.model =
     if not @addedRabbits and @numRabbits > 0
       @addedRabbits = true
 
-    if @addedRabbits and numPlants > 0 and @numRabbits < 9
+    if @addedRabbits and @numRabbits < 5
       @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
       @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
       @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
       @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
 
-    if @numRabbits < 16
-      @setProperty(allRabbits, "min offspring", 2)
-      @setProperty(allRabbits, "speed", 70)
-    else
-      @setProperty(allRabbits, "mating desire bonus", -20)
-      @setProperty(allRabbits, "min offspring", 1)
-      @setProperty(allRabbits, "speed", 50)
-
-    if @numRabbits > 50
-      @setProperty(allRabbits, "mating desire bonus", -40)
+    # As there are more rabbits, it takes longer for rabbits to reproduce
+    # Once there are 50 rabbits, they will stop reproducing entirely
+    @setProperty(allRabbits, "mating chance", -.005 * @numRabbits + .25)
 
   # Returns a random color trait, selecting from rabbits currently on screen
   copyRandomColorTrait: (allRabbits) ->
