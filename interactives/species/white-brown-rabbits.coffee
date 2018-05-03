@@ -136,4 +136,28 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
           }
         ]
       }
+      {
+        name: 'rabbit info tool'
+        contexts: ['info-tool']
+        rules: [
+          {
+            image:
+              path: "images/agents/rabbits/sandrat-light.png"
+              scale: 0.4
+              anchor:
+                x: 0.4
+                y: 0.5
+            useIf: (agent)-> agent.get('color') is 'white'
+          }
+          {
+            image:
+              path: "images/agents/rabbits/sandrat-dark.png"
+              scale: 0.4
+              anchor:
+                x: 0.4
+                y: 0.5
+            useIf: (agent)-> agent.get('color') is 'brown'
+          }
+        ]
+      }
     ]

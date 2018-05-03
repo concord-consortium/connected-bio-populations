@@ -40,3 +40,25 @@ background-image: url("data:image/gif;base64,R0lGODlhHQAgAPcAAAAAAP///wMDAgICAAQ
 .legend {
   text-align: center;
 }
+
+.bubble .content {
+  height: 75px;
+}
+#environment .bubble .content .agent {
+  height: 75px;
+}
+.bubble canvas {
+  height: 75px;
+}
+
+.bubble.bottom {
+  margin-top: 100px;
+}
+
+.bubble.top::before {
+  top: 50px;
+}
+
+.bubble.bottom::before {
+  top: 87px;
+}
