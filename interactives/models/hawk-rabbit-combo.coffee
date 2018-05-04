@@ -1,6 +1,7 @@
 helpers     = require 'helpers'
 
 Environment = require 'models/environment'
+EnvironmentView = require 'views/environment-view'
 Species     = require 'models/species'
 Agent       = require 'models/agent'
 Rule        = require 'models/rule'
@@ -33,6 +34,24 @@ Environment.prototype.randomLocationWithin = (left, top, width, height, avoidBar
   while avoidBarriers and @isInBarrier(point.x, point.y)
     point = {x: ExtMath.randomInt(width)+left, y: ExtMath.randomInt(height)+top}
   return point
+
+EnvironmentView.prototype.addMouseHandlers = () ->
+  for eventName in ["click", "mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend"]
+    @view.addEventListener eventName,  (evt) =>
+      if evt instanceof TouchEvent
+        # touch events get their coordinates from a different place
+        evt.envX = evt.changedTouches[0].pageX - @view.offsetLeft
+        evt.envY = evt.changedTouches[0].pageY - @view.offsetTop
+      else
+        # use page+offset location, which remain correct after iframe zoom
+        scale = document.querySelector("body").style.transform
+        scale = parseFloat(scale.slice(scale.indexOf(",") + 1))
+        evt.envX = (1 / scale) * (evt.pageX - @view.offsetLeft)
+        evt.envY = (1 / scale) * (evt.pageY - @view.offsetTop)
+        if (evt.type == "click")
+          console.log(evt.envX)
+          console.log(evt.envY)
+      @environment.send evt.type, evt
 
 window.model =
   brownness: 0
