@@ -76,7 +76,7 @@ window.model =
     env = if @envColors.length == 1 then env_single else env_double
     @interactive = new Interactive
       environment: env
-      speedSlider: true
+      speedSlider: false
       addOrganismButtons: [
         {
           species: rabbitSpecies
