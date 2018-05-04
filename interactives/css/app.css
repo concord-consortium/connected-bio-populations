@@ -58,6 +58,11 @@ background-image: url("data:image/gif;base64,R0lGODlhHQAgAPcAAAAAAP///wMDAgICAAQ
   height: 75px;
 }
 
+#environment .bubble .content .details {
+  width: 100px;
+  left: 112px;
+}
+
 .bubble.bottom {
   margin-top: 100px;
 }

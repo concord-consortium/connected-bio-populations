@@ -59,8 +59,8 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
       CHANCE_OF_MUTATION: 0
       INFO_VIEW_SCALE: 2.5
       INFO_VIEW_PROPERTIES:
-        "Color: ": 'color'
-        "Genome: ": 'genome'
+        "Fur color: ": 'color'
+        "Genotype: ": 'genome'
         "Sex: ": 'sex'
     traits: [
       new Trait {name: 'speed', default: 60 }
