@@ -255,8 +255,9 @@ window.model =
     return null
 
   setupGraphs: ->
-    graphs = []
-    graphs = graphs.concat(@createGraphForEnvs(
+    @graphData = {}
+
+    @createGraphForEnvs(
       "Mouse Colors", 
       "Time (s)",
       "Number of Mice",
@@ -275,9 +276,9 @@ window.model =
         "graph-alleles"
         "graph-genotypes"
       ]
-    ))
+    )
 
-    graphs = graphs.concat(@createGraphForEnvs(
+    @createGraphForEnvs(
       "Mouse Genotypes", 
       "Time (s)",
       "Number of Mice",
@@ -298,9 +299,9 @@ window.model =
         "graph-alleles"
         "graph-colors"
       ]
-    ))
+    )
 
-    graphs = graphs.concat(@createGraphForEnvs(
+    @createGraphForEnvs(
       "Mouse Alleles", 
       "Time (s)",
       "Number of Alleles",
@@ -319,18 +320,9 @@ window.model =
         "graph-colors"
         "graph-genotypes"
       ]
-    ))
+    )
 
-    colorGraphs = Array.prototype.slice.call(document.querySelectorAll(".color-graph"))
-    genotypeGraphs = Array.prototype.slice.call(document.querySelectorAll(".genotype-graph"))
-    alleleGraphs = Array.prototype.slice.call(document.querySelectorAll(".allele-graph"))
-    # Hide all but the default color graphs
-    that = @
-    genotypeGraphs.forEach((graph) => that.setElementVisible(graph, false))
-    alleleGraphs.forEach((graph) => that.setElementVisible(graph, false))
-
-  setElementVisible: (elem, visible) ->
-    elem.style.display = if visible then "block" else "none"
+    document.getElementById("graph-colors").click()
 
   createGraphForEnvs: (title, xLabel, yLabel, colors, seriesNames, graphId, counter, showButton, hideButtons)->
     outputOptions =
@@ -350,63 +342,73 @@ window.model =
       sampleInterval: (Environment.DEFAULT_RUN_LOOP_DELAY/1000)
       dataType: 'samples'
       dataColors: colors
+    @graphData[showButton] = {}
 
-    graphs = []
+    updateWindow = (graph) =>
+      # Pan the graph window every 5 seconds
+      pointsPerWindow = (5 * 1000) / Environment.DEFAULT_RUN_LOOP_DELAY
+      # Subtract 1 from the window since the first scroll isn't actually till 10 seconds
+      windowNum = Math.max(0, Math.floor(graph.numberOfPoints() / pointsPerWindow) - 1)
+      graph.xmin(windowNum * 5)
+      graph.xmax(graph.xmin() + 10)
+      graph.ymin(0)
+      graph.ymax(100)
+
     for i in [0...@envColors.length]
       that = @
       # Create a closure so all the callbacks use the correct indices
       do (i) ->
-        containerDiv = document.createElement("div")
-        containerDiv.className = "graph-container " + graphId
-        document.querySelector("#graphs").appendChild(containerDiv)
+        graph = null
+        that.graphData[showButton][i] = []
 
-        # Construct the graph
-        graphDiv = document.createElement("div")
-        graphDiv.className = "graph stat-graph"
-        fullId = graphId + "-" + i
-        graphDiv.id = fullId
-        containerDiv.appendChild(graphDiv)
-
-        graph = LabGrapher ("#" + fullId), outputOptions
-        graphs.push(graph)
-
-        # Construct the legend
-        seriesNames.forEach((series, i) =>
-          seriesText = document.createTextNode(series)
-          seriesDiv = document.createElement("div")
-          seriesDiv.className = "legend"
-          seriesDiv.style.color = "rgb( " + colors[i].join(",") + ")"
-          seriesDiv.appendChild(seriesText)
-          containerDiv.appendChild(seriesDiv)
-        )
-
-        updateWindow = (graph) =>
-          # Pan the graph window every 5 seconds
-          pointsPerWindow = (5 * 1000) / Environment.DEFAULT_RUN_LOOP_DELAY
-          # Subtract 1 from the window since the first scroll isn't actually till 10 seconds
-          windowNum = Math.max(0, Math.floor(graph.numberOfPoints() / pointsPerWindow) - 1)
-          graph.xmin(windowNum * 5)
-          graph.xmax(graph.xmin() + 10)
-          graph.ymin(0)
-          graph.ymax(100)
-
-        # Show/hide the graph on button clicks
+        # Construct/destroy the graph on button clicks
         document.getElementById(showButton).addEventListener("click", () =>
-          that.setElementVisible(containerDiv, true)
+          currGraph = document.getElementById("graph-container-" + i)
+          if (currGraph)
+            currGraph.remove()
+
+          containerDiv = document.createElement("div")
+          containerDiv.id = "graph-container-" + i
+          document.getElementById("graphs").appendChild(containerDiv)
+
+          # Construct the graph
+          graphDiv = document.createElement("div")
+          graphDiv.className = "graph stat-graph"
+          fullId = graphId + "-" + i
+          graphDiv.id = fullId
+          containerDiv.appendChild(graphDiv)
+
+          graph = LabGrapher ("#" + fullId), outputOptions
+
+          # Add all existing data
+          that.graphData[showButton][i].forEach((sample) => graph.addSamples(sample))
+
+          # Construct the legend
+          seriesNames.forEach((series, i) =>
+            seriesText = document.createTextNode(series)
+            seriesDiv = document.createElement("div")
+            seriesDiv.className = "legend"
+            seriesDiv.style.color = "rgb( " + colors[i].join(",") + ")"
+            seriesDiv.appendChild(seriesText)
+            containerDiv.appendChild(seriesDiv)
+          )
           updateWindow(graph)
         )
         hideButtons.forEach((buttonId) => 
-          document.getElementById(buttonId).addEventListener("click", () => that.setElementVisible(containerDiv, false))
+          document.getElementById(buttonId).addEventListener("click", () => graph = null)
         )
 
         Events.addEventListener Environment.EVENTS.RESET, =>
-          graph.reset()
-          updateWindow(graph)
+          that.graphData[showButton][i] = []
+          if (graph)
+            graph.reset()
+            updateWindow(graph)
 
         Events.addEventListener Environment.EVENTS.STEP, =>
-          graph.addSamples counter.call(that, that.locations.fields[i])
-          updateWindow(graph)
-    return graphs
+          that.graphData[showButton][i].push(counter.call(that, that.locations.fields[i]))
+          if (graph)
+            graph.addSamples counter.call(that, that.locations.fields[i])
+            updateWindow(graph)
 
   agentsOfSpecies: (species)->
     set = []

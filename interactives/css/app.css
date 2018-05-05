@@ -37,7 +37,7 @@ background-image: url("data:image/gif;base64,R0lGODlhHQAgAPcAAAAAAP///wMDAgICAAQ
   position: relative;
   top: 10px;
   display: flex;
-  width: 500%;
+  width: 100%;
 }
 
 .graph.stat-graph {
