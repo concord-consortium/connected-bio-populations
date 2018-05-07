@@ -24,12 +24,13 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
     makeNewborn: ->
       super()
 
-      #so ugly
+      # Ensure there's always at least one rabbit of each sex
       sex = if model.env.agents.length and
         model.env.agents[model.env.agents.length-1].species.speciesName is "rabbits" and
         model.env.agents[model.env.agents.length-1].get("sex") is "female" then "male" else "female"
 
       @set 'sex', sex
+      @set 'age', Math.round(Math.random() * 5)
 
     mate: ->
       nearest = @_nearestMate()

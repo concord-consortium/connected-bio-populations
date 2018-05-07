@@ -11,11 +11,14 @@ Events      = require 'events'
 ToolButton  = require 'ui/tool-button'
 BasicAnimal = require 'models/agents/basic-animal'
 
-plantSpecies  = require 'species/fast-plants-roots'
 rabbitSpecies = require 'species/white-brown-rabbits'
 hawkSpecies   = require 'species/hawks'
 env_single    = require 'environments/snow'
 env_double    = require 'environments/combo'
+
+# Adding patches to make certain animals (e.g. hawks) uninteractable
+Agent.prototype.canBeCarried = () ->
+  return true;
 
 ToolButton.prototype._states['carry-tool'].mousedown = (evt) ->
   agent = @getAgentAt(evt.envX, evt.envY)
@@ -26,11 +29,10 @@ ToolButton.prototype._states['carry-tool'].mousedown = (evt) ->
   @_origin = {x: evt.envX, y: evt.envY}
   @_agentOrigin = agent.getLocation()
 
-Agent.prototype.canBeCarried = () ->
-  return true;
-
 Environment.prototype.randomLocationWithin = (left, top, width, height, avoidBarriers=false)->
   point = {x: ExtMath.randomInt(width)+left, y: ExtMath.randomInt(height)+top}
+  # Patching for this line - the genetics version of populations.js left in a bug that calls
+  # @isInBarrier with the incorrect parameters
   while avoidBarriers and @isInBarrier(point.x, point.y)
     point = {x: ExtMath.randomInt(width)+left, y: ExtMath.randomInt(height)+top}
   return point
@@ -43,14 +45,12 @@ EnvironmentView.prototype.addMouseHandlers = () ->
         evt.envX = evt.changedTouches[0].pageX - @view.offsetLeft
         evt.envY = evt.changedTouches[0].pageY - @view.offsetTop
       else
-        # use page+offset location, which remain correct after iframe zoom
+        # This is the patched change - scaling the click location by the scale factor
         scale = document.querySelector("body").style.transform
+        # Hack to pull scale factor out of the css
         scale = parseFloat(scale.slice(scale.indexOf(",") + 1))
         evt.envX = (1 / scale) * (evt.pageX - @view.offsetLeft)
         evt.envY = (1 / scale) * (evt.pageY - @view.offsetTop)
-        if (evt.type == "click")
-          console.log(evt.envX)
-          console.log(evt.envY)
       @environment.send evt.type, evt
 
 window.model =
@@ -77,23 +77,19 @@ window.model =
     @interactive = new Interactive
       environment: env
       speedSlider: false
+      # These buttons appear, but their behavior is defined elsewhere by click handlers
       addOrganismButtons: [
         {
           species: rabbitSpecies
           imagePath: "images/agents/rabbits/sandrat-light.png"
-          traits: [
-            new Trait {name: "mating desire bonus", default: -20}
-            new Trait {name: "age", default: 3}
-          ]
+          traits: []
           limit: -1
           scatter: true
         }
         {
           species: hawkSpecies
           imagePath: "images/agents/hawks/hawk.png"
-          traits: [
-            new Trait {name: "mating desire bonus", default: -40}
-          ]
+          traits: []
           limit: -1
           scatter: true
         }
@@ -111,7 +107,6 @@ window.model =
 
     @env = env
     @env.setBackground("images/environments/" + @envColors.join("_") + ".png")
-    @plantSpecies = plantSpecies
     @hawkSpecies = hawkSpecies
     @rabbitSpecies = rabbitSpecies
 
@@ -144,19 +139,21 @@ window.model =
           else
             agent.set 'chance of being seen', (brownness*0.6)
 
+    # Makes rats in the labs immortal so they don't die immediately after they're placed
     env.addRule new Rule
       action: (agent) =>
         if agent.species is rabbitSpecies
           if agent._y < @env.height/4
             agent.set("is immortal", true)
-            agent.set("min offspring", 2)
             envIndex = @getAgentEnvironmentIndex(agent)
             population = @countRabbitsInArea(@locations.labs[envIndex])
-            overcrowded =population > 10
+            overcrowded = population > 10
             if overcrowded
-              agent.set("mating desire bonus", -40)
+              agent.set("max offspring", 0)
+              agent.set("mating chance", 0)
             else
-              agent.set("mating desire bonus", 0)
+              agent.set("max offspring", 1)
+              agent.set("mating chance", 1)
             if overcrowded and agent.get('age') > 30 and Math.random() < 0.2
               agent.die()
           else
@@ -166,14 +163,11 @@ window.model =
     return Math.min(Math.floor((agent._x/@env.width) * @envColors.length), @envColors.length - 1)
 
   setupEnvironment: ->
-    @current_counts =
-      all: {total: 0}
-      lab: {total: 0}
-      field: {total: 0}
+    # Add behaviors to the buttons with agent images on them
     buttons = [].slice.call($('.button img'))
     numMice = 30
     that = @
-    buttons[0].onclick = () ->
+    buttons[0].parentNode.onclick = () ->
       colors = that.getStartingColors(numMice)
       for i in [0...that.envColors.length]
         for j in [0...numMice]
@@ -182,13 +176,13 @@ window.model =
             new Trait {name: "age", default: Math.round(Math.random() * 5)}
             colors[j]
           ], that.locations.fields[i])
-      buttons[0].onclick = null
-    buttons[1].onclick = () ->
+      buttons[0].parentNode.onclick = null
+    buttons[1].parentNode.onclick = () ->
       for i in [0...that.envColors.length]
         that.addAgents(2, hawkSpecies, [], [
           new Trait {name: "mating desire bonus", default: -40}
         ], that.locations.fields[i])
-      buttons[1].onclick = null
+      buttons[1].parentNode.onclick = null
 
     Events.addEventListener Environment.EVENTS.RESET, =>
       model.setupEnvironment()
@@ -331,8 +325,8 @@ window.model =
       ylabel: yLabel
       xmin: 0
       xmax: 10
-      ymax:   100
-      ymin:   0
+      ymax: 100
+      ymin: 0
       xTickCount: 10
       yTickCount: 10
       xFormatter: "2d"
@@ -342,7 +336,6 @@ window.model =
       sampleInterval: (Environment.DEFAULT_RUN_LOOP_DELAY/1000)
       dataType: 'samples'
       dataColors: colors
-    @graphData[showButton] = {}
 
     updateWindow = (graph) =>
       # Pan the graph window every 5 seconds
@@ -354,6 +347,8 @@ window.model =
       graph.ymin(0)
       graph.ymax(100)
 
+    @graphData[showButton] = {}
+      
     for i in [0...@envColors.length]
       that = @
       # Create a closure so all the callbacks use the correct indices
@@ -528,25 +523,15 @@ window.model =
   numRabbits: 0
   checkRabbits: (location)->
     allRabbits = @agentsOfSpeciesInRect(@rabbitSpecies, location)
-    allPlants  = @agentsOfSpecies(@plantSpecies)
 
     @numRabbits = allRabbits.length
-
-    if @numRabbits is 0
-      if @addedRabbits and not @addedHawks
-        @env.stop()
-        @showMessage "Uh oh, all the rabbits have died!<br/>Did you add any plants? Reset the model and try it again."
-        return
-    numPlants = allPlants.length
 
     if not @addedRabbits and @numRabbits > 0
       @addedRabbits = true
 
     if @addedRabbits and @numRabbits < 5
-      @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
-      @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
-      @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
-      @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
+      for i in [0...4]
+        @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
 
     # As there are more rabbits, it takes longer for rabbits to reproduce
     # Once there are 50 rabbits, they will stop reproducing entirely
@@ -591,21 +576,8 @@ window.model =
     allHawks = @agentsOfSpeciesInRect(@hawkSpecies, location)
     numHawks = allHawks.length
 
-    if numHawks is 0
-      if @addedHawks
-        if @addedRabbits
-          @env.stop()
-          @showMessage "Uh oh, all the animals have died!<br/>Was there any food for the rabbits to eat? Reset the model and try it again."
-        else
-          @env.stop()
-          @showMessage "Uh oh, all the hawks have died!<br/>Were there any rabbits for them to eat? Reset the model and try it again."
-      return
-
     if not @addedHawks and numHawks > 0
       @addedHawks = true
-
-    if @addedHawks and @numRabbits > 0 and numHawks < 2
-      @addAgent @hawkSpecies
 
     @setProperty(allHawks, "is immortal", true)
     @setProperty(allHawks, "mating desire bonus", -40)
@@ -624,7 +596,7 @@ window.model =
   ]
 
 window.onload = ->
-  helpers.preload [model, env_single, env_double, plantSpecies, rabbitSpecies, hawkSpecies], ->
+  helpers.preload [model, env_single, env_double, rabbitSpecies, hawkSpecies], ->
     model.checkParams()
     model.run()
     model.setupGraphs()
