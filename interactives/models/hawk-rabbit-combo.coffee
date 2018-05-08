@@ -584,9 +584,9 @@ window.model =
     @setProperty(allHawks, "hunger bonus", 5)
 
   preload: [
-    "images/agents/grass/tallgrass.png",
-    "images/agents/rabbits/rabbit2.png",
-    "images/agents/owls/owl.png",
+    "images/agents/rabbits/sandrat-dark.png",
+    "images/agents/rabbits/sandrat-light.png",
+    "images/agents/hawks/hawk.png",
     "images/environments/white.png",
     "images/environments/brown.png",
     "images/environments/brown_brown.png",
