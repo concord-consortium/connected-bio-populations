@@ -1,0 +1,13 @@
+{
+  "name": "classList",
+  "_cacheHeaders": {
+    "ETag": "\"615456a225b29f9d37fe4a1c9fed712a008d0984\"",
+    "Content-Length": "2209",
+    "Content-Type": "text/plain; charset=utf-8"
+  },
+  "_release": "e-tag:615456a22",
+  "main": "index.js",
+  "_source": "https://raw.github.com/eligrey/classList.js/master/classList.js",
+  "_target": "*",
+  "_originalSource": "https://raw.github.com/eligrey/classList.js/master/classList.js"
+}

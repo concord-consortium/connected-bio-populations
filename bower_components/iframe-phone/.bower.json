@@ -1,0 +1,13 @@
+{
+  "name": "iframe-phone",
+  "_cacheHeaders": {
+    "ETag": "\"d486c0a6885c2f32db55a6a2f580443ddda87e4f\"",
+    "Content-Length": "5301",
+    "Content-Type": "text/plain; charset=utf-8"
+  },
+  "_release": "e-tag:d486c0a68",
+  "main": "index.js",
+  "_source": "https://raw.githubusercontent.com/concord-consortium/iframe-phone/master/dist/iframe-phone.js",
+  "_target": "*",
+  "_originalSource": "https://raw.githubusercontent.com/concord-consortium/iframe-phone/master/dist/iframe-phone.js"
+}

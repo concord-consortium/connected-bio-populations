@@ -1,0 +1,13 @@
+{
+  "name": "lab-grapher",
+  "_cacheHeaders": {
+    "ETag": "\"e0932d9bba593509f1cc57b4348c6bd9c25d3257\"",
+    "Content-Length": "19439",
+    "Content-Type": "text/plain; charset=utf-8"
+  },
+  "_release": "e-tag:e0932d9bb",
+  "main": "index.js",
+  "_source": "https://raw.github.com/concord-consortium/lab-grapher/fix-samples-autoscale/dist/lab-grapher.js",
+  "_target": "*",
+  "_originalSource": "https://raw.github.com/concord-consortium/lab-grapher/fix-samples-autoscale/dist/lab-grapher.js"
+}
