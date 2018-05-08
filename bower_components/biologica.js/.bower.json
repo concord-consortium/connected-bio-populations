@@ -1,0 +1,13 @@
+{
+  "name": "biologica.js",
+  "_cacheHeaders": {
+    "ETag": "\"eabbca84288e19115ff0a6ca1114d513ac5ee4a0\"",
+    "Content-Length": "12906",
+    "Content-Type": "text/plain; charset=utf-8"
+  },
+  "_release": "e-tag:eabbca842",
+  "main": "index.js",
+  "_source": "https://raw.githubusercontent.com/concord-consortium/biologica.js/master/dist/biologica.js",
+  "_target": "*",
+  "_originalSource": "https://raw.githubusercontent.com/concord-consortium/biologica.js/master/dist/biologica.js"
+}

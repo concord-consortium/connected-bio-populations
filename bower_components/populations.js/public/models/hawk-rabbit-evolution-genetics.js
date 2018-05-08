@@ -24,7 +24,7 @@
 
   plantSpecies = require('species/fast-plants-roots');
 
-  rabbitSpecies = require('species/white-brown-rabbits');
+  rabbitSpecies = require('species/white-brown-rabbits-genetics');
 
   hawkSpecies = require('species/hawks');
 
@@ -46,23 +46,9 @@
           }, {
             species: rabbitSpecies,
             imagePath: "images/agents/rabbits/rabbit2.png",
-            traits: [
-              new Trait({
-                name: "mating desire bonus",
-                "default": -20
-              }), new Trait({
-                name: "hunger bonus",
-                "default": -10
-              }), new Trait({
-                name: "age",
-                "default": 3
-              }), new Trait({
-                name: "resource consumption rate",
-                "default": 10
-              })
-            ],
-            limit: 30,
-            scatter: 30
+            traits: [],
+            limit: 60,
+            scatter: 60
           }, {
             species: hawkSpecies,
             imagePath: "images/agents/hawks/hawk.png",
@@ -84,17 +70,28 @@
       });
       document.getElementById('environment').appendChild(this.interactive.getEnvironmentPane());
       this.env = env;
+      this.env.wrapEastWest = true;
+      this.env.wrapNorthSouth = true;
       this.plantSpecies = plantSpecies;
       this.hawkSpecies = hawkSpecies;
       this.rabbitSpecies = rabbitSpecies;
+      Events.addEventListener(Environment.EVENTS.AGENT_ADDED, (function(_this) {
+        return function(evt) {
+          var agent;
+          agent = evt.detail.agent;
+          if (!agent.bred && agent.species === _this.rabbitSpecies) {
+            return agent.set('age', ExtMath.randomInt(9));
+          }
+        };
+      })(this));
       return env.addRule(new Rule({
         action: (function(_this) {
           return function(agent) {
             if (agent.species === rabbitSpecies) {
               if (agent.get('color') === 'brown') {
-                return agent.set('chance of being seen', 0.6 - (_this.brownness * 0.6));
+                return agent.set('chance of being seen', 0.5 - (_this.brownness * 0.5));
               } else {
-                return agent.set('chance of being seen', _this.brownness * 0.6);
+                return agent.set('chance of being seen', _this.brownness * 0.65);
               }
             }
           };
@@ -107,9 +104,9 @@
         title: "Number of rabbits",
         xlabel: "Time (s)",
         ylabel: "Number of rabbits",
-        xmax: 100,
+        xmax: 120,
         xmin: 0,
-        ymax: 50,
+        ymax: 70,
         ymin: 0,
         xTickCount: 10,
         yTickCount: 10,
@@ -119,7 +116,7 @@
         fontScaleRelativeToParent: true,
         sampleInterval: Environment.DEFAULT_RUN_LOOP_DELAY / 1000,
         dataType: 'samples',
-        dataColors: ["#999999", "#995500", "#F00"]
+        dataColors: [[153, 153, 153], [153, 85, 0], [255, 0, 0]]
       };
       this.outputGraph = LabGrapher('#graph', outputOptions);
       Events.addEventListener(Environment.EVENTS.RESET, (function(_this) {
@@ -169,7 +166,7 @@
         return function() {
           var t;
           t = Math.floor(_this.env.date * Environment.DEFAULT_RUN_LOOP_DELAY / 1000);
-          if (t > 99) {
+          if (t > 119) {
             _this.env.stop();
             _this.showMessage("All the snow is gone. Look at the graph.<br/>How many white and brown rabbits are left in the field?");
             return;
@@ -216,24 +213,34 @@
       }
       return results;
     },
-    addAgent: function(species, properties) {
-      var agent, i, len, prop;
-      if (properties == null) {
-        properties = [];
+    addAgent: function(species, traits) {
+      var agent;
+      if (traits == null) {
+        traits = [];
       }
-      agent = species.createAgent();
+      agent = species.createAgent(traits);
       agent.setLocation(this.env.randomLocation());
-      for (i = 0, len = properties.length; i < len; i++) {
-        prop = properties[i];
-        agent.set(prop[0], prop[1]);
-      }
       return this.env.addAgent(agent);
     },
     addedRabbits: false,
     addedHawks: false,
     numRabbits: 0,
+    resourceConsumptionTrait: new Trait({
+      name: 'resource consumption rate',
+      "default": 10
+    }),
+    brownTrait: new Trait({
+      name: 'color',
+      "default": 'a:b,b:b',
+      isGenetic: true
+    }),
+    whiteTrait: new Trait({
+      name: 'color',
+      "default": 'a:B,b:b',
+      isGenetic: true
+    }),
     checkRabbits: function() {
-      var allPlants, allRabbits, color, numPlants;
+      var allPlants, allRabbits, numPlants;
       allRabbits = this.agentsOfSpecies(this.rabbitSpecies);
       allPlants = this.agentsOfSpecies(this.plantSpecies);
       this.numRabbits = allRabbits.length;
@@ -248,24 +255,13 @@
       if (!this.addedRabbits && this.numRabbits > 0) {
         this.addedRabbits = true;
       }
-      if (this.addedRabbits && numPlants > 0 && this.numRabbits < 9) {
-        this.addAgent(this.rabbitSpecies, [["resource consumption rate", 10]]);
-        this.addAgent(this.rabbitSpecies, [["resource consumption rate", 10]]);
-        color = this.brownness > 0.5 ? "brown" : "white";
-        this.addAgent(this.rabbitSpecies, [["resource consumption rate", 10], ["color", color]]);
-        this.addAgent(this.rabbitSpecies, [["resource consumption rate", 10], ["color", color]]);
-      }
-      if (this.numRabbits < 16) {
-        this.setProperty(allRabbits, "min offspring", 2);
-        this.setProperty(allRabbits, "speed", 70);
+      this.setProperty(allRabbits, "mating desire bonus", 40 - this.numRabbits);
+      this.setProperty(allRabbits, "metabolism", this.numRabbits / 12.5);
+      this.setProperty(allRabbits, "hunger bonus", -35);
+      if (this.numRabbits < 25) {
+        return this.setProperty(allRabbits, "max offspring", 5);
       } else {
-        this.setProperty(allRabbits, "mating desire bonus", -20);
-        this.setProperty(allRabbits, "hunger bonus", -10);
-        this.setProperty(allRabbits, "min offspring", 1);
-        this.setProperty(allRabbits, "speed", 50);
-      }
-      if (this.numRabbits > 50) {
-        return this.setProperty(allRabbits, "mating desire bonus", -40);
+        return this.setProperty(allRabbits, "max offspring", 2);
       }
     },
     checkHawks: function() {
@@ -310,13 +306,7 @@
     checkPlants: function() {
       var allPlants;
       allPlants = this.agentsOfSpecies(this.plantSpecies);
-      if (allPlants.length < 100) {
-        return this.setProperty(allPlants, 'growth rate', 0.007);
-      } else if (allPlants.length < 300) {
-        return this.setProperty(allPlants, 'growth rate', 0.0035);
-      } else {
-        return this.setProperty(allPlants, 'growth rate', 0.0005);
-      }
+      return this.setProperty(allPlants, 'growth rate', 3.5 / allPlants.length);
     },
     preload: ["images/agents/grass/tallgrass.png", "images/agents/rabbits/rabbit2.png", "images/agents/hawks/hawk.png", "images/environments/snow.png", "images/environments/snow-1.png", "images/environments/snow-2.png", "images/environments/snow-3.png", "images/environments/snow-4.png", "images/environments/snow-5.png", "images/environments/snow-6.png", "images/environments/snow-7.png", "images/environments/snow-8.png", "images/environments/snow-9.png"]
   };

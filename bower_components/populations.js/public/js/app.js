@@ -1,42 +1,59 @@
-(function(/*! Brunch !*/) {
+(function() {
   'use strict';
 
-  var globals = typeof window !== 'undefined' ? window : global;
+  var globals = typeof window === 'undefined' ? global : window;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
+  var has = ({}).hasOwnProperty;
 
-  var has = function(object, name) {
-    return ({}).hasOwnProperty.call(object, name);
+  var aliases = {};
+
+  var endsWith = function(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
-  var expand = function(root, name) {
-    var results = [], parts, part;
-    if (/^\.\.?(\/|$)/.test(name)) {
-      parts = [root, name].join('/').split('/');
-    } else {
-      parts = name.split('/');
-    }
-    for (var i = 0, length = parts.length; i < length; i++) {
-      part = parts[i];
-      if (part === '..') {
-        results.pop();
-      } else if (part !== '.' && part !== '') {
-        results.push(part);
+  var unalias = function(alias, loaderPath) {
+    var start = 0;
+    if (loaderPath) {
+      if (loaderPath.indexOf('components/' === 0)) {
+        start = 'components/'.length;
+      }
+      if (loaderPath.indexOf('/', start) > 0) {
+        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
       }
     }
-    return results.join('/');
+    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
+    if (result) {
+      return 'components/' + result.substring(0, result.length - '.js'.length);
+    }
+    return alias;
   };
 
+  var expand = (function() {
+    var reg = /^\.\.?(\/|$)/;
+    return function(root, name) {
+      var results = [], parts, part;
+      parts = (reg.test(name) ? root + '/' + name : name).split('/');
+      for (var i = 0, length = parts.length; i < length; i++) {
+        part = parts[i];
+        if (part === '..') {
+          results.pop();
+        } else if (part !== '.' && part !== '') {
+          results.push(part);
+        }
+      }
+      return results.join('/');
+    };
+  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var dir = dirname(path);
-      var absolute = expand(dir, name);
+      var absolute = expand(dirname(path), name);
       return globals.require(absolute, path);
     };
   };
@@ -51,21 +68,26 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
+    path = unalias(name, loaderPath);
 
-    if (has(cache, path)) return cache[path].exports;
-    if (has(modules, path)) return initModule(path, modules[path]);
+    if (has.call(cache, path)) return cache[path].exports;
+    if (has.call(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  var define = function(bundle, fn) {
+  require.alias = function(from, to) {
+    aliases[to] = from;
+  };
+
+  require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has(bundle, key)) {
+        if (has.call(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -74,21 +96,18 @@
     }
   };
 
-  var list = function() {
+  require.list = function() {
     var result = [];
     for (var item in modules) {
-      if (has(modules, item)) {
+      if (has.call(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
+  require.brunch = true;
   globals.require = require;
-  globals.require.define = define;
-  globals.require.register = define;
-  globals.require.list = list;
-  globals.require.brunch = true;
 })();
 require.register("animated-sprite", function(exports, require, module) {
 PIXI.AnimatedSprite = function(sequences, firstSequence) {
@@ -126,6 +145,7 @@ PIXI.AnimatedSprite.prototype.gotoAndPlay = function(where) {
     this.frameRate = this.sequences[where].frameRate || 60;
     this.loop = this.sequences[where].loop || false;
   } else {
+    this.frames = this.sequences[this.currentSequence].frames;
     this.currentFrame = where;
   }
   this.playing = true;
@@ -297,7 +317,15 @@ ExtMath.randomFloat = function(max) {
   return Math.random() * max;
 };
 
-ExtMath.randomValue = function(min, max) {
+ExtMath.randomValue = function(a, b) {
+  var max, min;
+  if (a <= b) {
+    min = a;
+    max = b;
+  } else {
+    min = b;
+    max = a;
+  }
   return min + Math.random() * (max - min);
 };
 
@@ -362,6 +390,13 @@ ExtMath.TWO_PI = Math.PI * 2;
 
 ExtMath.normalizeRads = function(t) {
   return t - ExtMath.TWO_PI * Math.floor((t + Math.PI) / ExtMath.TWO_PI);
+};
+
+ExtMath.distanceSquared = function(p1, p2) {
+  var dx, dy;
+  dx = p1.x - p2.x;
+  dy = p1.y - p2.y;
+  return dx * dx + dy * dy;
 };
 
 module.exports = {
@@ -528,7 +563,8 @@ module.exports = {
 });
 
 ;require.register("models/agent", function(exports, require, module) {
-var Agent, AgentView, defaultProperties, helpers;
+var Agent, AgentView, defaultProperties, helpers,
+  __hasProp = {}.hasOwnProperty;
 
 AgentView = require('views/agent-view');
 
@@ -576,6 +612,7 @@ module.exports = Agent = (function() {
         y: y
       });
     }
+    this.alleles = {};
     this.makeNewborn();
   }
 
@@ -698,16 +735,15 @@ module.exports = Agent = (function() {
 
   /*
     Returns an offspring and places it in the environment
-  
-    Only asexual reproduction for now
   */
 
 
   Agent.prototype.createOffspring = function(mate) {
     var offspring;
-    offspring = this._clone();
-    offspring._mutate();
+    offspring = this._breed(mate);
+    offspring._mutate(offspring.organism != null);
     offspring.makeNewborn();
+    offspring.resetGeneticTraits(offspring.organism == null);
     offspring.bred = true;
     if (this.environment) {
       offspring.setLocation(this._findOffspringLocation());
@@ -716,25 +752,121 @@ module.exports = Agent = (function() {
     return offspring;
   };
 
+  Agent.prototype.resetGeneticTraits = function(createOrganism) {
+    var allele, allele_set, characteristic, desired_sex, trait, _i, _len, _ref, _ref1, _results;
+    if (createOrganism == null) {
+      createOrganism = true;
+    }
+    if (this.species.geneticSpecies != null) {
+      if (createOrganism) {
+        desired_sex = (this.hasProp('sex') && this.get('sex') === 'male' ? BioLogica.MALE : BioLogica.FEMALE);
+        allele_set = [];
+        _ref = this.alleles;
+        for (trait in _ref) {
+          if (!__hasProp.call(_ref, trait)) continue;
+          allele = _ref[trait];
+          allele_set.push(allele);
+        }
+        this.organism = new BioLogica.Organism(this.species.geneticSpecies, allele_set.join(), desired_sex);
+      }
+      _ref1 = this.species.traits;
+      _results = [];
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        trait = _ref1[_i];
+        if (trait.isGenetic) {
+          characteristic = this.organism.getCharacteristic(trait.name);
+          if (trait.isNumeric) {
+            _results.push(this.set(trait.name, (trait.float ? parseFloat(characteristic) : parseInt(characteristic))));
+          } else {
+            _results.push(this.set(trait.name, characteristic));
+          }
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    }
+  };
+
+  Agent.prototype.canShowInfo = function() {
+    return true;
+  };
+
+  Agent.prototype.zIndex = function(val) {
+    if (val != null) {
+      this._zIndex = val;
+      return;
+    }
+    if (this._zIndex != null) {
+      return this._zIndex;
+    } else {
+      return this._y;
+    }
+  };
+
   Agent.prototype._clone = function() {
-    var clone, prop;
+    var allele, clone, prop, trait, _ref;
     clone = this.species.createAgent();
     for (prop in this._props) {
       clone.set(prop, this._props[prop]);
     }
+    _ref = this.alleles;
+    for (trait in _ref) {
+      allele = _ref[trait];
+      clone.alleles[trait] = allele;
+    }
     return clone;
   };
 
-  Agent.prototype._mutate = function() {
+  Agent.prototype._breed = function(mate) {
+    var alleleStr, child, father, mother, trait, _i, _len, _ref;
+    child = this._clone();
+    if ((this.species.geneticSpecies != null) && (this.organism != null) && ((mate != null ? mate.organism : void 0) != null)) {
+      if (this.hasProp('sex') && this.get('sex') === 'male') {
+        mother = mate.organism;
+        father = this.organism;
+      } else {
+        mother = this.organism;
+        father = mate.organism;
+      }
+      child.organism = BioLogica.breed(mother, father, false);
+      if (child.hasProp('sex')) {
+        child.set('sex', child.organism.sex === BioLogica.FEMALE ? 'female' : 'male');
+      }
+      _ref = this.species.traits;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        trait = _ref[_i];
+        if (trait.isGenetic) {
+          alleleStr = child.organism.getAlleleStringForTrait(trait.name);
+          child.alleles[trait.name] = alleleStr;
+        }
+      }
+    }
+    return child;
+  };
+
+  Agent.prototype._mutate = function(skipGenetic) {
     var currentVal, mutatedVal, trait, _i, _len, _ref, _results;
+    if (skipGenetic == null) {
+      skipGenetic = false;
+    }
     _ref = this.species.traits;
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       trait = _ref[_i];
       if (trait.mutatable && Math.random() < this.species.defs.CHANCE_OF_MUTATION) {
-        currentVal = this.get(trait.name);
-        mutatedVal = trait.mutate(currentVal);
-        _results.push(this.set(trait.name, mutatedVal));
+        if (trait.isGenetic) {
+          if (skipGenetic) {
+            continue;
+          }
+          currentVal = this.alleles[trait.name];
+          mutatedVal = trait.mutate(currentVal);
+          _results.push(this.alleles[trait.name] = mutatedVal);
+        } else {
+          currentVal = this.get(trait.name);
+          mutatedVal = trait.mutate(currentVal);
+          _results.push(this.set(trait.name, mutatedVal));
+        }
       } else {
         _results.push(void 0);
       }
@@ -810,7 +942,7 @@ module.exports = AnimatedAgent = (function() {
   function AnimatedAgent() {}
 
   AnimatedAgent.MOVEMENTS = {
-    STOP: "stop",
+    STOPPED: "stop",
     MOVESTEP: "move-step"
   };
 
@@ -978,10 +1110,10 @@ module.exports = BasicAnimal = (function(_super) {
     nearest = this._nearestMate();
     if (nearest != null) {
       this.chase(nearest);
-      if (nearest.distanceSq < Math.pow(this.get('mating distance'), 2)) {
+      if (nearest.distanceSq < Math.pow(this.get('mating distance'), 2) && ((this.species.defs.CHANCE_OF_MATING == null) || Math.random() < this.species.defs.CHANCE_OF_MATING)) {
         max = this.get('max offspring');
         this.set('max offspring', Math.max(max / 2, 1));
-        this.reproduce();
+        this.reproduce(nearest);
         this.set('max offspring', max);
         return this._timeLastMated = this.environment.date;
       }
@@ -1012,7 +1144,7 @@ module.exports = BasicAnimal = (function(_super) {
 
   BasicAnimal.prototype.runFrom = function(agentDistance) {
     var directionToMove, directionToRunTo;
-    directionToRunTo = this._direction(this.getLocation(), agentDistance.agent.getLocation()) + Math.PI + (ExtMath.randomGaussian / 3);
+    directionToRunTo = this._direction(this.getLocation(), agentDistance.agent.getLocation()) + Math.PI + (ExtMath.randomGaussian() / 3);
     directionToMove = (this.get('direction') * 19 + directionToRunTo) / 20;
     this.set('direction', directionToMove);
     return this.move(this.get('speed'));
@@ -1199,7 +1331,8 @@ module.exports = BasicAnimal = (function(_super) {
           traits: [trait]
         }
       ],
-      quantity: 1
+      quantity: 1,
+      mating: true
     });
     return nearest[0] || null;
   };
@@ -1222,7 +1355,8 @@ module.exports = BasicAnimal = (function(_super) {
           traits: [trait, trait2]
         }
       ],
-      quantity: 1
+      quantity: 1,
+      mating: true
     });
     return nearest[0] || null;
   };
@@ -1259,6 +1393,7 @@ module.exports = BasicAnimal = (function(_super) {
     var agent, agentDistance, nearest, nextType, opts, returnedAgents, trait, type, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
     opts = helpers.setDefaults(options, {
       camo: true,
+      mating: false,
       quantity: 3,
       crossBarriers: false
     });
@@ -1282,7 +1417,7 @@ module.exports = BasicAnimal = (function(_super) {
         if (agent === this) {
           continue;
         }
-        if (opts.camo && agent instanceof BasicAnimal && ExtMath.randomFloat() > agent.get('chance of being seen')) {
+        if (opts.camo && !opts.mating && agent instanceof BasicAnimal && ExtMath.randomFloat() > agent.get('chance of being seen')) {
           continue;
         }
         if (agent.hasProp('current behavior') && agent.get('current behavior') === BasicAnimal.BEHAVIOR.HIDING) {
@@ -1541,7 +1676,8 @@ defaultOptions = {
   barriers: [],
   wrapEastWest: false,
   wrapNorthSouth: false,
-  seasonLengths: []
+  seasonLengths: [],
+  depthPerception: false
 };
 
 cellDefaults = {
@@ -1751,6 +1887,19 @@ module.exports = Environment = (function(_super) {
     return this.set(col, row, prop, val);
   };
 
+  Environment.prototype.getAgentsAt = function(x, y) {
+    var agent, agents, _i, _len, _ref;
+    agents = [];
+    _ref = this.agents;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      agent = _ref[_i];
+      if (agent.getView().contains(x, y)) {
+        agents.push(agent);
+      }
+    }
+    return agents;
+  };
+
   Environment.prototype.getAgentAt = function(x, y) {
     var agent, _i, _len, _ref;
     _ref = this.agents;
@@ -1761,6 +1910,56 @@ module.exports = Environment = (function(_super) {
       }
     }
     return null;
+  };
+
+  Environment.prototype.getAgentsCloseTo = function(x, y, maxDistance, speciesName) {
+    var agent, agents, area, _agents, _i, _len;
+    if (maxDistance == null) {
+      maxDistance = 10;
+    }
+    area = {
+      x: x - maxDistance,
+      y: y - maxDistance,
+      width: maxDistance * 2,
+      height: maxDistance * 2
+    };
+    agents = this.agentsWithin(area);
+    if (!agents.length) {
+      return [];
+    }
+    if (speciesName) {
+      _agents = [];
+      for (_i = 0, _len = agents.length; _i < _len; _i++) {
+        agent = agents[_i];
+        if (agent.species.speciesName === speciesName) {
+          _agents.push(agent);
+        }
+      }
+      agents = _agents;
+    }
+    return agents;
+  };
+
+  Environment.prototype.getAgentCloseTo = function(x, y, maxDistance, speciesName) {
+    var agent, agents, _i, _len;
+    if (maxDistance == null) {
+      maxDistance = 10;
+    }
+    agents = this.getAgentsCloseTo(x, y, maxDistance, speciesName);
+    if (!agents.length) {
+      return null;
+    }
+    for (_i = 0, _len = agents.length; _i < _len; _i++) {
+      agent = agents[_i];
+      agent.__distance = ExtMath.distanceSquared(agent.getLocation(), {
+        x: x,
+        y: y
+      });
+    }
+    agents = agents.sort(function(a, b) {
+      return a.__distance - b.__distance;
+    });
+    return agents[0];
   };
 
   Environment.prototype.setBarriers = function(bars) {
@@ -2281,7 +2480,7 @@ defaultDefs = {
 
 module.exports = Species = (function() {
   function Species(_arg) {
-    this.speciesName = _arg.speciesName, this.individualName = _arg.individualName, this.agentClass = _arg.agentClass, this.traits = _arg.traits, this.viewLayer = _arg.viewLayer, this.imageProperties = _arg.imageProperties, this.imageRules = _arg.imageRules, this.defs = _arg.defs, this.reproductiveStrategy = _arg.reproductiveStrategy, this.mutationChance = _arg.mutationChance;
+    this.speciesName = _arg.speciesName, this.individualName = _arg.individualName, this.agentClass = _arg.agentClass, this.traits = _arg.traits, this.viewLayer = _arg.viewLayer, this.imageProperties = _arg.imageProperties, this.imageRules = _arg.imageRules, this.defs = _arg.defs, this.reproductiveStrategy = _arg.reproductiveStrategy, this.geneticSpecies = _arg.geneticSpecies, this.mutationChance = _arg.mutationChance;
     this.defs = helpers.setDefaults(this.defs || {}, defaultDefs);
     this._parsePreloads();
   }
@@ -2303,12 +2502,21 @@ module.exports = Species = (function() {
     _ref = this.traits;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       trait = _ref[_i];
-      agent.set(trait.name, trait.getDefaultValue());
+      if (trait.isGenetic) {
+        agent.alleles[trait.name] = trait.getDefaultValue();
+      } else {
+        agent.set(trait.name, trait.getDefaultValue());
+      }
     }
     for (_j = 0, _len1 = extraTraits.length; _j < _len1; _j++) {
       trait = extraTraits[_j];
-      agent.set(trait.name, trait.getDefaultValue());
+      if (trait.isGenetic) {
+        agent.alleles[trait.name] = trait.getDefaultValue();
+      } else {
+        agent.set(trait.name, trait.getDefaultValue());
+      }
     }
+    agent.resetGeneticTraits();
     return agent;
   };
 
@@ -2456,7 +2664,7 @@ require('helpers');
 
 module.exports = Trait = (function() {
   function Trait(_arg) {
-    this.name = _arg.name, this.possibleValues = _arg.possibleValues, this.min = _arg.min, this.max = _arg.max, this["default"] = _arg["default"], this.float = _arg.float, this.mutatable = _arg.mutatable;
+    this.name = _arg.name, this.possibleValues = _arg.possibleValues, this.min = _arg.min, this.max = _arg.max, this["default"] = _arg["default"], this.float = _arg.float, this.mutatable = _arg.mutatable, this.isGenetic = _arg.isGenetic, this.isNumeric = _arg.isNumeric;
     void 0;
   }
 
@@ -2502,6 +2710,28 @@ module.exports = Trait = (function() {
 
   Trait.prototype.isPossibleValue = function(val) {
     return this.possibleValues.indexOf(val) !== -1;
+  };
+
+  Trait.prototype.inherit = function(motherVal, fatherVal) {
+    var inheritedVal;
+    inheritedVal = null;
+    if (!this.isGenetic) {
+      if (this.possibleValues != null) {
+        inheritedVal = (ExtMath.flip() === 0 ? motherVal : fatherVal);
+      } else {
+        if (this.float) {
+          inheritedVal = ExtMath.randomValue(motherVal, fatherVal);
+        } else {
+          if (motherVal > fatherVal) {
+            motherVal += 1;
+          } else {
+            fatherVal += 1;
+          }
+          inheritedVal = Math.floor(ExtMath.randomValue(motherVal, fatherVal));
+        }
+      }
+    }
+    return inheritedVal;
   };
 
   Trait.prototype._mutateValueFromRange = function(val) {
@@ -2777,7 +3007,9 @@ module.exports = InfoView = (function() {
     agentView = document.createElement('div');
     agentView.classList.add('agent');
     this._stage = new PIXI.Stage(0xFFFFFF, true);
-    this._renderer = new PIXI.CanvasRenderer(125, 160);
+    this._renderer = new PIXI.CanvasRenderer(125, 160, {
+      transparent: true
+    });
     this._container = new PIXI.DisplayObjectContainer();
     this._stage.addChild(this._container);
     this.setAgent(this.agent);
@@ -3351,11 +3583,14 @@ module.exports = ToolButton = (function() {
         return this._view.setCursor("info-tool");
       },
       click: function(evt) {
-        var agent, style, _i, _len, _ref;
-        agent = this.getAgentAt(evt.envX, evt.envY);
-        if (agent == null) {
+        var agent, agents, style, _i, _len, _ref;
+        agents = this.getAgentsAt(evt.envX, evt.envY).filter(function(a) {
+          return a.canShowInfo();
+        });
+        if (!(agents.length > 0)) {
           return;
         }
+        agent = agents[0];
         if (this.infoPopup != null) {
           this.infoPopup.setAgent(agent);
         } else {
@@ -3585,12 +3820,14 @@ module.exports = Toolbar = (function() {
 });
 
 ;require.register("views/agent-view", function(exports, require, module) {
-var AgentView, helpers,
+var AgentView, AnimatedAgent, helpers,
   __hasProp = {}.hasOwnProperty;
+
+require('animated-sprite');
 
 helpers = require('helpers');
 
-require('animated-sprite');
+AnimatedAgent = require('models/agents/animated-agent');
 
 module.exports = AgentView = (function() {
   function AgentView(_arg) {
@@ -3617,13 +3854,13 @@ module.exports = AgentView = (function() {
     });
     for (_i = 0, _len = images.length; _i < _len; _i++) {
       layer = images[_i];
-      sprite = this._createSprite(layer.selectedImage, layer.name);
-      this._setSpriteProperties(sprite, layer.selectedImage);
+      sprite = this._createOrUpdateSprite(layer.selectedImage);
       sprites[layer.name] = sprite;
       container.addChild(sprite);
     }
     container.position.x = this.agent._x;
     container.position.y = this.agent._y;
+    container.agent = this.agent;
     stage.addChild(container);
     if (context === 'environment' || context === 'carry-tool') {
       this._rendered = true;
@@ -3634,7 +3871,7 @@ module.exports = AgentView = (function() {
   };
 
   AgentView.prototype.rerender = function(stage, context) {
-    var i, layer, name, names, newImages, sequence, sprite, texture, _i, _j, _len, _len1, _ref;
+    var animation, currentMovement, i, layer, name, names, newImages, sequence, sprite, _animation, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
     if (context == null) {
       context = 'environment';
     }
@@ -3650,20 +3887,34 @@ module.exports = AgentView = (function() {
       layer = newImages[i];
       names.push(layer.name);
       if (this._sprites[layer.name] == null) {
-        sprite = this._createSprite(layer.selectedImage);
+        sprite = this._createOrUpdateSprite(layer.selectedImage);
         this._sprites[layer.name] = sprite;
         this._container.addChildAt(sprite, i);
       } else if ((layer.selectedImage.path != null) && layer.selectedImage.path !== this._sprites[layer.name].texture.baseTexture.source.src) {
-        texture = PIXI.Texture.fromImage(layer.selectedImage.path);
-        sprite = this._sprites[layer.name];
-        sprite.setTexture(texture);
+        this._createOrUpdateSprite(layer.selectedImage, this._sprites[layer.name]);
+      } else if (this._sprites[layer.name] instanceof PIXI.AnimatedSprite) {
+        currentMovement = this.agent.getMovement();
+        _ref = layer.selectedImage.animations;
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          _animation = _ref[_j];
+          if (_animation.movement === currentMovement) {
+            animation = _animation;
+          }
+        }
+        if (animation && animation.path !== this._sprites[layer.name].sequences[animation.movement].path) {
+          sprite = this._sprites[layer.name];
+          this._createOrUpdateSprite(layer.selectedImage, sprite);
+        } else {
+          this._setSpriteProperties(this._sprites[layer.name], layer.selectedImage);
+        }
+      } else {
+        this._setSpriteProperties(this._sprites[layer.name], layer.selectedImage);
       }
-      this._setSpriteProperties(this._sprites[layer.name], layer.selectedImage);
     }
-    _ref = this._sprites;
-    for (name in _ref) {
-      if (!__hasProp.call(_ref, name)) continue;
-      sprite = _ref[name];
+    _ref1 = this._sprites;
+    for (name in _ref1) {
+      if (!__hasProp.call(_ref1, name)) continue;
+      sprite = _ref1[name];
       if (names.indexOf(name) === -1) {
         this._container.removeChild(sprite);
         delete this._sprites[name];
@@ -3671,19 +3922,22 @@ module.exports = AgentView = (function() {
     }
     this._container.position.x = this.agent._x;
     this._container.position.y = this.agent._y;
-    for (i = _j = 0, _len1 = newImages.length; _j < _len1; i = ++_j) {
+    for (i = _k = 0, _len2 = newImages.length; _k < _len2; i = ++_k) {
       layer = newImages[i];
       if (((sprite = this._sprites[layer.name]) != null) && sprite instanceof PIXI.AnimatedSprite) {
-        window.sprite = sprite;
-        sequence = this.agent.getMovement();
-        if (!sequence) {
+        sequence = this.agent.environment._isRunning ? this.agent.getMovement() : AnimatedAgent.MOVEMENTS.STOPPED;
+        if (!(sequence && (sprite.sequences[sequence] != null))) {
           return;
         }
         if (sequence !== sprite.currentSequence) {
           if (!sprite.playing) {
             sprite.gotoAndPlay(sequence);
           } else {
-            sprite.nextSequence = sequence;
+            if ((_ref2 = sprite.sequences[sprite.currentSequence]) != null ? _ref2.interruptible : void 0) {
+              sprite.gotoAndPlay(sequence);
+            } else {
+              sprite.nextSequence = sequence;
+            }
           }
         }
         sprite.advanceTime();
@@ -3753,52 +4007,93 @@ module.exports = AgentView = (function() {
     return container;
   };
 
-  AgentView.prototype._createSprite = function(image, layerName) {
-    var animation, i, sequences, sprite, spriteTextures, texture, _i, _j, _len, _ref, _ref1;
+  AgentView.prototype._createOrUpdateSprite = function(image, sprite) {
+    var graphics, setupAnimatedSprite, texture,
+      _this = this;
     if (!image.animations) {
-      texture = PIXI.Texture.fromImage(image.path);
-      sprite = new PIXI.Sprite(texture);
+      if (image.path) {
+        texture = PIXI.Texture.fromImage(image.path);
+      } else if (image.render) {
+        graphics = new PIXI.Graphics();
+        image.render(graphics);
+        texture = graphics.generateTexture();
+      }
+      if (!sprite) {
+        sprite = new PIXI.Sprite(texture);
+      } else {
+        sprite.setTexture(texture);
+      }
+      this._setSpriteProperties(sprite, image);
     } else {
-      sprite = null;
-      _ref = image.animations;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        animation = _ref[_i];
-        spriteTextures = [];
-        for (i = _j = 0, _ref1 = animation.length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
-          spriteTextures.push(PIXI.Texture.fromFrame(animation.animationName + "-" + i));
-        }
-        if (!sprite) {
-          sequences = {};
-          sequences[animation.movement] = {
-            frames: spriteTextures
-          };
-          if (animation.frameRate) {
-            sequences[animation.movement].frameRate = animation.frameRate;
+      setupAnimatedSprite = function(image, sprite) {
+        var animation, i, sequences, spriteTextures, _i, _j, _len, _ref, _ref1;
+        _ref = image.animations;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          animation = _ref[_i];
+          spriteTextures = [];
+          for (i = _j = 0, _ref1 = animation.length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+            spriteTextures.push(PIXI.Texture.fromFrame(animation.animationName + "-" + i));
           }
-          if (animation.loop) {
-            sequences[animation.movement].loop = animation.loop;
-          }
-          sprite = new PIXI.AnimatedSprite(sequences);
-        } else {
-          sprite.sequences[animation.movement] = {
-            frames: spriteTextures
-          };
-          if (animation.frameRate) {
-            sprite.sequences[animation.movement].frameRate = animation.frameRate;
-          }
-          if (animation.loop) {
-            sprite.sequences[animation.movement].loop = animation.loop;
+          if (!sprite) {
+            sequences = {};
+            sequences[animation.movement] = {
+              frames: spriteTextures
+            };
+            if (animation.frameRate) {
+              sequences[animation.movement].frameRate = animation.frameRate;
+            }
+            if (animation.loop) {
+              sequences[animation.movement].loop = animation.loop;
+            }
+            if (animation.onComplete) {
+              sequences[animation.movement].onComplete = animation.onComplete;
+            }
+            sequences[animation.movement].interruptible = animation.interruptible;
+            sequences[animation.movement].path = animation.path;
+            sprite = new PIXI.AnimatedSprite(sequences);
+          } else {
+            sprite.sequences[animation.movement] = {
+              frames: spriteTextures
+            };
+            if (animation.frameRate) {
+              sprite.sequences[animation.movement].frameRate = animation.frameRate;
+            }
+            if (animation.loop) {
+              sprite.sequences[animation.movement].loop = animation.loop;
+            }
+            if (animation.onComplete) {
+              sprite.sequences[animation.movement].onComplete = animation.onComplete;
+            }
+            sprite.sequences[animation.movement].interruptible = animation.interruptible;
+            sprite.sequences[animation.movement].path = animation.path;
           }
         }
         sprite.nextSequence = null;
         sprite.onComplete = function(sequence) {
-          if (!sprite.sequences[sequence].loop) {
-            if (sprite.nextSequence) {
-              sprite.gotoAndPlay(sprite.nextSequence);
-              return sprite.nextSequence = null;
+          var func;
+          if (func = sprite.sequences[sprite.currentSequence].onComplete) {
+            _this.agent[func]();
+          }
+          if (sprite.nextSequence) {
+            sprite.gotoAndPlay(sprite.nextSequence);
+            sprite.nextSequence = null;
+          } else {
+            if (!sprite.sequences[sequence].loop) {
+              sprite.currentSequence = null;
             }
           }
+          if (sprite.nextImage != null) {
+            setupAnimatedSprite(image, sprite);
+            return sprite.nextImage = null;
+          }
         };
+        _this._setSpriteProperties(sprite, image);
+        return sprite;
+      };
+      if (sprite && sprite.playing) {
+        sprite.nextImage = image;
+      } else {
+        sprite = setupAnimatedSprite(image, sprite);
       }
     }
     return sprite;
@@ -3890,9 +4185,11 @@ module.exports = EnvironmentView = (function() {
     this._backgroundSprite.anchor.y = 0;
     this._backgroundSprite.position.x = 0;
     this._backgroundSprite.position.y = 0;
+    this.scaleBackground();
     layer.addChild(this._backgroundSprite);
     this.renderBarriers(layer);
     this.renderAgents();
+    this._sortStage();
     animate = function() {
       var agent, _i, _len, _ref;
       requestAnimFrame(animate);
@@ -3905,6 +4202,7 @@ module.exports = EnvironmentView = (function() {
         _this.environment.carriedAgent.getView().rerender(_this._getOrCreateLayer(100), 'carry-tool');
       }
       _this.barrierGraphics.visible = _this.showingBarriers;
+      _this._sortStage();
       return _this.renderer.render(_this.stage);
     };
     requestAnimFrame(animate);
@@ -4019,7 +4317,24 @@ module.exports = EnvironmentView = (function() {
   EnvironmentView.prototype.updateBackground = function() {
     var texture;
     texture = PIXI.Texture.fromImage(this.environment.imgPath);
-    return this._backgroundSprite.setTexture(texture);
+    this._backgroundSprite.setTexture(texture);
+    return this.scaleBackground();
+  };
+
+  EnvironmentView.prototype.scaleBackground = function() {
+    var origHeight, origWidth, _ref;
+    _ref = [this._backgroundSprite.width, this._backgroundSprite.height], origWidth = _ref[0], origHeight = _ref[1];
+    if (this.environment.backgroundScaleX != null) {
+      this._backgroundSprite.width = this.environment.width * this.environment.backgroundScaleX;
+      if (this.environment.backgroundScaleY) {
+        return this._backgroundSprite.height = this.environment.height * this.environment.backgroundScaleY;
+      } else {
+        return this._backgroundSprite.height *= this._backgroundSprite.width / origWidth;
+      }
+    } else if (this.environment.backgroundScaleY != null) {
+      this._backgroundSprite.height = this.environment.height * this.environment.backgroundScaleY;
+      return this._backgroundSprite.width *= this._backgroundSprite.height / origHeight;
+    }
   };
 
   EnvironmentView.prototype._getOrCreateLayer = function(idx) {
@@ -4046,6 +4361,25 @@ module.exports = EnvironmentView = (function() {
       }
     }
     return this._layers[idx];
+  };
+
+  EnvironmentView.prototype._sortStage = function() {
+    var container, _i, _len, _ref, _results;
+    if (!this.environment.depthPerception) {
+      return;
+    }
+    _ref = this.stage.children;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      container = _ref[_i];
+      _results.push(container.children.sort(function(a, b) {
+        var aIdx, bIdx, _ref1, _ref2;
+        aIdx = ((_ref1 = a.agent) != null ? _ref1.zIndex : void 0) != null ? a.agent.zIndex() : a.position.y * this.environment.width + a.position.x;
+        bIdx = ((_ref2 = b.agent) != null ? _ref2.zIndex : void 0) != null ? b.agent.zIndex() : b.position.y * this.environment.width + b.position.x;
+        return aIdx - bIdx;
+      }));
+    }
+    return _results;
   };
 
   return EnvironmentView;
