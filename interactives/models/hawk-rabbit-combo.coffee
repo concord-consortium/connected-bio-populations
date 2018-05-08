@@ -275,7 +275,7 @@ window.model =
     @createGraphForEnvs(
       "Mouse Genotypes", 
       "Time (s)",
-      "Number of Mice",
+      "% of Mice",
       [
         [242, 203, 124] #bb
         [170, 170, 170] #bB
@@ -298,7 +298,7 @@ window.model =
     @createGraphForEnvs(
       "Mouse Alleles", 
       "Time (s)",
-      "Number of Alleles",
+      "% of Alleles",
       [
         [153, 153, 153]
         [153,  85,   0]
@@ -438,7 +438,7 @@ window.model =
       bB++ if a.alleles.color is "a:b,b:B"
       bB++ if a.alleles.color is "a:B,b:b"
       BB++ if a.alleles.color is "a:B,b:B"
-    return [bb, bB, BB]
+    return @valuesToPercents([bb, bB, BB])
 
   graphRabbitAlleles:(location) ->
     count_b = 0
@@ -446,7 +446,15 @@ window.model =
     for a in @agentsOfSpeciesInRect(@rabbitSpecies, location)
       if a.alleles.color.indexOf("a:b") > -1 then count_b++ else count_B++
       if a.alleles.color.indexOf("b:b") > -1 then count_b++ else count_B++
-    return [count_b, count_B]
+    return @valuesToPercents([count_b, count_B])
+
+  valuesToPercents: (values) ->
+    sum = values.reduce((total, value) ->
+      return total + value
+    )
+    return values.map((value) ->
+      return Math.round((value / sum) * 100)
+    )
 
   showMessage: (message, callback) ->
     helpers.showMessage message, @env.getView().view.parentElement, callback
