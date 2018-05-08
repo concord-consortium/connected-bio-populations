@@ -1,0 +1,47 @@
+include includes/_helpers
+doctype html
+html
+  head
+    include includes/shared-headers
+    include includes/shared-css
+    include includes/shared-js
+    include includes/shared-graph
+
+    +script(src="models/authoring.js")
+    style(type="text/css").
+      #url {
+        width: 1000px
+      }
+
+  body
+    div(id="envs")
+      | Environment colors: 
+      select(id="env-1")
+        option(value="white") White
+        option(value="brown") Brown
+      select(id="env-2")
+        option(value="none") None
+        option(value="white") White
+        option(value="brown") Brown
+    div(id="switch-box")
+      | Show "Switch environments" button
+      input(type="checkbox", id="switch")
+    div(id="pop-control")
+      | Author population control
+      input(type="radio", id="author-control" name="pop-control", checked="true", value="author")
+      | User population control
+      input(type="radio", id="user-control" name="pop-control", value="user")
+    div(id="control-type")
+      | Control population colors
+      input(type="radio", id="color-control" name="control-type", checked="true", value="color")
+      | Control population genotypes
+      input(type="radio", id="genotype-control" name="control-type", value="genotype")
+    div(id="color-controls")
+      | Percent brown
+      input(type="text", id="percent-brown", value="75")
+    div(id="genotype-controls", hidden="true")
+      | Percent BB
+      input(type="text", id="percentBB", value="38")
+      | Percent Bb
+      input(type="text", id="percentBb", value="38")
+    input(id="url", type="text")

@@ -5,7 +5,7 @@
   helpers = require('helpers');
 
   window.onload = function() {
-    var authorControl, colorControl, colorControls, env1, env2, forceCheck, genotypeControl, params, percentBrown, setColors, setControlType, setEnvs, setPopControl, setSwitch, showSwitch, updateUrl, userControl;
+    var authorControl, colorControl, colorControls, env1, env2, forceCheck, genotypeControl, genotypeControls, params, percentBB, percentBb, percentBrown, setColors, setControlType, setEnvs, setGenotypes, setPopControl, setSwitch, showSwitch, updateUrl, userControl;
     params = {};
     env1 = document.getElementById("env-1");
     env2 = document.getElementById("env-2");
@@ -16,6 +16,9 @@
     genotypeControl = document.getElementById("genotype-control");
     colorControls = document.getElementById("color-controls");
     percentBrown = document.getElementById("percent-brown");
+    genotypeControls = document.getElementById("genotype-controls");
+    percentBB = document.getElementById("percentBB");
+    percentBb = document.getElementById("percentBb");
     updateUrl = function() {
       var i, key, len, ref, strParams, url;
       url = "https://concord-consortium.github.io/connected-bio-populations/hawk-rabbit-combo.html?";
@@ -53,21 +56,49 @@
     };
     showSwitch.onchange = setSwitch;
     setPopControl = function(e) {
-      params["popControl"] = e.target.value;
+      var controller;
+      controller = e.target.value;
+      params["popControl"] = controller;
+      if (controller === "user") {
+        percentBrown.disabled = true;
+        percentBB.disabled = true;
+        percentBb.disabled = true;
+      } else {
+        percentBrown.disabled = false;
+        percentBB.disabled = false;
+        percentBb.disabled = false;
+      }
       return updateUrl();
     };
     authorControl.onchange = setPopControl;
     userControl.onchange = setPopControl;
     setControlType = function(e) {
-      params["controlType"] = e.target.value;
+      var controlType;
+      controlType = e.target.value;
+      params["controlType"] = controlType;
+      if (controlType === "color") {
+        colorControls.hidden = false;
+        genotypeControls.hidden = true;
+      } else {
+        genotypeControls.hidden = false;
+        colorControls.hidden = true;
+      }
       return updateUrl();
     };
     colorControl.onchange = setControlType;
     genotypeControl.onchange = setControlType;
     setColors = function(e) {
-      return params["percentBrown"] = e.target.value;
+      params["percentBrown"] = e.target.value;
+      return updateUrl();
     };
-    percentBrown.onchange = setColors;
+    percentBrown.onkeyup = setColors;
+    setGenotypes = function(e) {
+      params["percentBB"] = percentBB.value;
+      params["percentBb"] = percentBb.value;
+      return updateUrl();
+    };
+    percentBB.onkeyup = setGenotypes;
+    percentBb.onkeyup = setGenotypes;
     return updateUrl();
   };
 
