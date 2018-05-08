@@ -226,7 +226,7 @@ window.model =
       else
         BBParam = @getURLParam("percentBB")
         percentBB = if BBParam then parseInt(BBParam) / 100 else .38
-        BbParam = @getURLParam("percentBB")
+        BbParam = @getURLParam("percentBb")
         percentBb = if BbParam then parseInt(BbParam) / 100 else .38
       for i in [0...num]
         colors.push(@createRandomColorTraitByGenotype(percentBB, percentBb))
