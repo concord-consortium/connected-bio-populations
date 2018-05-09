@@ -5,6 +5,7 @@ window.onload = ->
   env1 = document.getElementById("env-1")
   env2 = document.getElementById("env-2")
   showSwitch = document.getElementById("switch")
+  showCarryTool = document.getElementById("carryTool")
   authorControl = document.getElementById("author-control")
   userControl = document.getElementById("user-control")
   colorControl = document.getElementById("color-control")
@@ -44,6 +45,11 @@ window.onload = ->
     params["switch"] = showSwitch.checked
     updateUrl()
   showSwitch.onchange = setSwitch
+
+  setCarryTool = () ->
+    params["carryTool"] = carryTool.checked
+    updateUrl()
+  carryTool.onchange = setCarryTool
 
   setPopControl = (e) ->
     controller = e.target.value

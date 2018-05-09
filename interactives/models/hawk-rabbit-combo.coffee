@@ -72,8 +72,13 @@ window.model =
       else
         document.querySelector("#genome-controls").hidden = false
 
+    @carryTool = if @getURLParam("carryTool") == "false" then false else true
+
   run: ->
     env = if @envColors.length == 1 then env_single else env_double
+    toolButtons = [{type: ToolButton.INFO_TOOL}]
+    if @carryTool
+      toolButtons.push({type: ToolButton.CARRY_TOOL})
     @interactive = new Interactive
       environment: env
       speedSlider: false
@@ -94,14 +99,7 @@ window.model =
           scatter: true
         }
       ]
-      toolButtons: [
-        {
-          type: ToolButton.INFO_TOOL
-        },
-        {
-          type: ToolButton.CARRY_TOOL
-        }
-      ]
+      toolButtons: toolButtons
 
     document.getElementById('environment').appendChild @interactive.getEnvironmentPane()
 
