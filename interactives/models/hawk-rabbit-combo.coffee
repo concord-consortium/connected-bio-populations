@@ -74,6 +74,19 @@ window.model =
 
     @carryTool = if @getURLParam("carryTool") == "false" then false else true
 
+    @shownGraphs = ['graph-colors', 'graph-genotypes', 'graph-alleles']
+    @hiddenGraphs = @getURLParam("hideGraphs", true) or []
+    that = @
+    @shownGraphs = @shownGraphs.filter((graph) -> 
+      that.hiddenGraphs.indexOf(graph) == -1
+    )
+    @hiddenGraphs.forEach((graph) ->
+      document.getElementById(graph).hidden = true
+    )
+    if @shownGraphs.length == 1
+      # No need to show switching buttons if there's only 1 graph
+      document.getElementById(@shownGraphs[0]).hidden = true
+
   run: ->
     env = if @envColors.length == 1 then env_single else env_double
     toolButtons = [{type: ToolButton.INFO_TOOL}]
@@ -249,72 +262,76 @@ window.model =
   setupGraphs: ->
     @graphData = {}
 
-    @createGraphForEnvs(
-      "Mouse Colors", 
-      "Time (s)",
-      "Number of Mice",
-      [
-        [153, 153, 153]
-        [153,  85,   0]
-      ]
-      [
-        "Light mice",
-        "Dark mice"
-      ]
-      "color-graph",
-      @graphRabbitColors
-      "graph-colors",
-      [
-        "graph-alleles"
-        "graph-genotypes"
-      ]
-    )
+    if @shownGraphs.indexOf('graph-colors') > -1
+      @createGraphForEnvs(
+        "Mouse Colors", 
+        "Time (s)",
+        "Number of Mice",
+        [
+          [153, 153, 153]
+          [153,  85,   0]
+        ]
+        [
+          "Light mice",
+          "Dark mice"
+        ]
+        "color-graph",
+        @graphRabbitColors
+        "graph-colors",
+        [
+          "graph-alleles"
+          "graph-genotypes"
+        ]
+      )
 
-    @createGraphForEnvs(
-      "Mouse Genotypes", 
-      "Time (s)",
-      "% of Mice",
-      [
-        [242, 203, 124] #bb
-        [170, 170, 170] #bB
-        [85, 85, 85] #BB
-      ],
-      [
-        "bb mice",
-        "bB mice",
-        "BB mice"
-      ]
-      "genotype-graph",
-      @graphRabbitGenotypes
-      "graph-genotypes",
-      [
-        "graph-alleles"
-        "graph-colors"
-      ]
-    )
+    if @shownGraphs.indexOf('graph-genotypes') > -1
+      @createGraphForEnvs(
+        "Mouse Genotypes", 
+        "Time (s)",
+        "% of Mice",
+        [
+          [242, 203, 124] #bb
+          [170, 170, 170] #bB
+          [85, 85, 85] #BB
+        ],
+        [
+          "bb mice",
+          "bB mice",
+          "BB mice"
+        ]
+        "genotype-graph",
+        @graphRabbitGenotypes
+        "graph-genotypes",
+        [
+          "graph-alleles"
+          "graph-colors"
+        ]
+      )
 
-    @createGraphForEnvs(
-      "Mouse Alleles", 
-      "Time (s)",
-      "% of Alleles",
-      [
-        [153, 153, 153]
-        [153,  85,   0]
-      ]
-      [
-        "b alleles",
-        "B alleles"
-      ]
-      "allele-graph",
-      @graphRabbitAlleles
-      "graph-alleles",
-      [
-        "graph-colors"
-        "graph-genotypes"
-      ]
-    )
+    if @shownGraphs.indexOf('graph-alleles') > -1
+      @createGraphForEnvs(
+        "Mouse Alleles", 
+        "Time (s)",
+        "% of Alleles",
+        [
+          [153, 153, 153]
+          [153,  85,   0]
+        ]
+        [
+          "b alleles",
+          "B alleles"
+        ]
+        "allele-graph",
+        @graphRabbitAlleles
+        "graph-alleles",
+        [
+          "graph-colors"
+          "graph-genotypes"
+        ]
+      )
 
-    document.getElementById("graph-colors").click()
+    if @shownGraphs.length > 0
+      document.getElementById(@shownGraphs[0]).click()
 
   createGraphForEnvs: (title, xLabel, yLabel, colors, seriesNames, graphId, counter, showButton, hideButtons)->
     outputOptions =

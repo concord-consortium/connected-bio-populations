@@ -41,15 +41,11 @@ window.onload = ->
   env1.onchange = setEnvs
   env2.onchange = setEnvs
 
-  setSwitch = () ->
-    params["switch"] = showSwitch.checked
+  setCheckbox = (e) ->
+    params[e.target.id] = e.target.checked
     updateUrl()
-  showSwitch.onchange = setSwitch
-
-  setCarryTool = () ->
-    params["carryTool"] = carryTool.checked
-    updateUrl()
-  carryTool.onchange = setCarryTool
+  showSwitch.onchange = setCheckbox
+  carryTool.onchange = setCheckbox
 
   setPopControl = (e) ->
     controller = e.target.value
@@ -90,5 +86,22 @@ window.onload = ->
     updateUrl()
   percentBB.onkeyup = setGenotypes
   percentBb.onkeyup = setGenotypes
+
+  showColorGraphs = document.getElementById("show-color-graphs")
+  showGenotypeGraphs = document.getElementById("show-genotype-graphs")
+  showAlleleGraphs = document.getElementById("show-allele-graphs")
+  setGraphs = (e) ->
+    param = []
+    if (showColorGraphs.checked)
+      param.push("graph-colors")
+    if (showGenotypeGraphs.checked)
+      param.push("graph-genotypes")
+    if (showAlleleGraphs.checked)
+      param.push("graph-alleles")
+    params["hideGraphs"] = param.join(",")
+    updateUrl()
+  showColorGraphs.onchange = setGraphs
+  showGenotypeGraphs.onchange = setGraphs
+  showAlleleGraphs.onchange = setGraphs
 
   updateUrl()
