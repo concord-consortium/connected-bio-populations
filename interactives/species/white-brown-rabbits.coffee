@@ -133,7 +133,7 @@ require.register "species/white-brown-rabbits", (exports, require, module) ->
               anchor:
                 x: 0.75
                 y: 0.5
-            useIf: (agent)-> model.showHetero and (agent.alleles.color is 'a:B,b:b' or agent.alleles.color is 'a:b,B:B')
+            useIf: (agent)-> model.showHetero and (agent.alleles.color is 'a:B,b:b' or agent.alleles.color is 'a:b,b:B')
           }
         ]
       }
