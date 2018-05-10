@@ -265,7 +265,7 @@ window.model =
     if @shownGraphs.indexOf('graph-colors') > -1
       @createGraphForEnvs(
         "Mouse Colors", 
-        "Time (s)",
+        "Time",
         "Number of Mice",
         [
           [153, 153, 153]
@@ -287,7 +287,7 @@ window.model =
     if @shownGraphs.indexOf('graph-genotypes') > -1
       @createGraphForEnvs(
         "Mouse Genotypes", 
-        "Time (s)",
+        "Time",
         "% of Mice",
         [
           [242, 203, 124] #bb
@@ -311,7 +311,7 @@ window.model =
     if @shownGraphs.indexOf('graph-alleles') > -1
       @createGraphForEnvs(
         "Mouse Alleles", 
-        "Time (s)",
+        "Time",
         "% of Alleles",
         [
           [153, 153, 153]
