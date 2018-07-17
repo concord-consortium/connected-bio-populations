@@ -131,8 +131,8 @@ window.model =
       width = Math.round(@env.width/numEnvs)
       labHeight = Math.round(@env.height/4)
       fieldHeight = Math.round(@env.height * 3/4)
-      labs.push({x: x, y: labY, width: width, height: labHeight})
-      fields.push({x: x, y: fieldY, width: width, height: fieldHeight})
+      labs.push({x: x, y: labY, width: width, height: labHeight, index: i})
+      fields.push({x: x, y: fieldY, width: width, height: fieldHeight, index: i})
 
     @locations =
       all: {x: 0, y: 0, width: @env.width, height: @env.height }
@@ -555,6 +555,26 @@ window.model =
     if @addedRabbits and @numRabbits < 5
       for i in [0...4]
         @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
+
+    # If there are no specific selective pressures (ie there are no hawks, or the hawks eat 
+    # everything with equal probability), the population should be 'stabilized', so that no
+    # color of rabbit dies out completely
+    if @addedRabbits and (!@addedHawks or @envColors[location.index] == 'neutral')
+      numWhite = 0
+      allRabbits.forEach((rabbit) ->
+        if rabbit.get('color') is 'white'
+          numWhite++
+      )
+
+      # Make sure there are *some* white rabbits to ensure white rabbits are possible
+      if numWhite > 0 and numWhite < 10
+        for i in [0...3]
+          @addAgent(@rabbitSpecies, [], [@createRandomColorTraitByPhenotype(0)], location)
+
+      numBrown = allRabbits.length - numWhite
+      if numBrown > 0 and numBrown < 10
+        for i in [0...3]
+          @addAgent(@rabbitSpecies, [], [@createRandomColorTraitByPhenotype(1)], location)
 
     # As there are more rabbits, it takes longer for rabbits to reproduce
     # Once there are 50 rabbits, they will stop reproducing entirely
