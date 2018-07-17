@@ -480,6 +480,9 @@ window.model =
     switchButton.onclick = =>
       if @envColors.length == 1
         if @envColors[0] == "white"
+          @envColors[0] = "neutral"
+          @env.setBackground("images/environments/neutral.png")
+        else if @envColors[0] == "neutral"
           @envColors[0] = "brown"
           @env.setBackground("images/environments/brown.png")
         else
