@@ -2,16 +2,17 @@ Environment = require 'models/environment'
 Rule        = require 'models/rule'
 
 env = new Environment
-  columns:  45
+  columns:  90
   rows:     45
-  imgPath: "images/environments/white.png"
+  imgPath: "images/environments/white_brown.png"
   wrapEastWest: false
   wrapNorthSouth: false
   barriers: [
-    [0, 100, 500, 50]
+    [0, 100, 900, 50],
+    [425, 0, 50, 450]
   ]
 
 # env.getView().showingBarriers = true
 
-require.register "environments/snow", (exports, require, module) ->
+require.register "environments/combo", (exports, require, module) ->
   module.exports = env

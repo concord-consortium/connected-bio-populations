@@ -3,3 +3,4 @@
 
 # Built files
 /public
+*.DS_Store

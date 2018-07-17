@@ -1,0 +1,46 @@
+include includes/_helpers
+doctype html
+html
+  head
+    include includes/shared-headers
+    include includes/shared-css
+    include includes/shared-js
+    include includes/shared-graph
+
+    // model files here
+    +script(src="species/white-brown-rabbits.js")
+    +script(src="species/hawks.js")
+    +script(src="species/biologica/rabbits.js")
+    +script(src="environments/snow.js")
+    +script(src="environments/combo.js")
+    +script(src="models/hawk-rabbit-combo.js")
+
+  body
+    #color-controls(hidden=true)
+      % Brown:
+      input#starting-brown(value="50")
+      % White:
+      input#starting-white(value="50")
+    #genome-controls(hidden=true)
+      % BB:
+      input#starting-BB(value="25")
+      % Bb:
+      input#starting-Bb(value="25")
+      % bb:
+      input#starting-bb(value="50")
+    #environment
+    #env-controls
+      #switch-controls(hidden=true)
+        button#switch-env= "Switch Environments"
+      #overlay-controls
+        input#view-sex-check(type="checkbox")
+        | Show males and females
+        img(class="overlay-icon" src="images/overlays/male-female-stack.png")
+        input#view-hetero-check(type="checkbox")
+        | Show heterozygotes
+        img(class="overlay-icon" src="images/overlays/heterozygous-icon.png")
+    #graph-controls
+      button#graph-colors= "Graph fur colors"
+      button#graph-genotypes= "Graph genotypes"
+      button#graph-alleles= "Graph alleles"
+    #graphs

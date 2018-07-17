@@ -11,18 +11,27 @@ html
     +script(src="species/fast-plants-roots.js")
     +script(src="species/white-brown-rabbits.js")
     +script(src="species/hawks.js")
+    +script(src="species/biologica/rabbits.js")
     +script(src="environments/snow.js")
     +script(src="models/hawk-rabbit-evolution.js")
+
     style(type="text/css").
       #graph {
         position: absolute;
-        top: 500px;
+        top: 525px;
         left: 5px;
         width: 500px;
         height: 300px;
       }
 
   body
+    #above
+      % Brown:
+      input#starting-brown(value="50")
+      % White:
+      input#starting-white(value="50")
     #environment
+    #controls
+      button#switch-env= "Switch Environments"
     #below
       #graph
