@@ -18,12 +18,20 @@ background-image: url("data:image/gif;base64,R0lGODlhHQAgAPcAAAAAAP///wMDAgICAAQ
 
 #env-controls {
   position: relative;
-  height: 50px;
+  height: 40px;
   top: -10px;
   left: 10px;
   background-color: #EFCA9A;
   display: flex;
   align-items: center;
+}
+
+.autoscale-button {
+  position: relative;
+  top: 27px;
+  left: 327px;
+  z-index: 3;
+  width: 110px;
 }
 
 .overlay-icon {
@@ -42,6 +50,7 @@ background-image: url("data:image/gif;base64,R0lGODlhHQAgAPcAAAAAAP///wMDAgICAAQ
 
 .graph.stat-graph {
   margin-right: 15px;
+  margin-top: -20px;
   width: 450px;
   height: 300px;
 }
