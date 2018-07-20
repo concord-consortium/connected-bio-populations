@@ -54,7 +54,6 @@ EnvironmentView.prototype.addMouseHandlers = () ->
       @environment.send evt.type, evt
 
 window.model =
-  brownness: 0
   checkParams: ->
     envParam = @getURLParam('envs', true)
     @envColors = if envParam then envParam else ['white']
@@ -143,8 +142,10 @@ window.model =
     env.addRule new Rule
       action: (agent) =>
         if agent.species is rabbitSpecies
-          envIndex = @getAgentEnvironmentIndex(agent)
-          brownness = @envColors[envIndex] == 'brown'
+          brownness = switch @envColors[@getAgentEnvironmentIndex(agent)]
+            when 'white' then 0
+            when 'neutral' then .5
+            when 'brown' then 1
           if agent.get('color') is 'brown'
             agent.set 'chance of being seen', (0.6 - (brownness*0.6))
           else
@@ -479,6 +480,9 @@ window.model =
     switchButton.onclick = =>
       if @envColors.length == 1
         if @envColors[0] == "white"
+          @envColors[0] = "neutral"
+          @env.setBackground("images/environments/neutral.png")
+        else if @envColors[0] == "neutral"
           @envColors[0] = "brown"
           @env.setBackground("images/environments/brown.png")
         else
