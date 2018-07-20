@@ -582,7 +582,7 @@ window.model =
 
     if @addedRabbits and @numRabbits < 5
       for i in [0...4]
-        @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
+        @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)], location)
 
     # If there are no specific selective pressures (ie there are no hawks, or the hawks eat 
     # everything with equal probability), the population should be 'stabilized', so that no
