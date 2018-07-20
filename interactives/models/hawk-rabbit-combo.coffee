@@ -608,6 +608,15 @@ window.model =
     # Once there are 50 rabbits, they will stop reproducing entirely
     @setProperty(allRabbits, "mating chance", -.005 * @numRabbits + .25)
 
+    if @addedRabbits and @addedHawks
+        that = @
+        allRabbits.forEach((rabbit) -> 
+          if (rabbit.get('color') != that.envColors[location.index])
+            # When rats are getting preyed on, there should be less of them
+            # Reduce their carrying capacity here to accomplish that
+            rabbit.set('mating chance', -.005 * that.numRabbits + .22)
+        )
+
   # Returns a random color trait, selecting from rabbits currently on screen
   copyRandomColorTrait: (allRabbits) ->
     randomRabbit = allRabbits[Math.floor(Math.random() * allRabbits.length)]
