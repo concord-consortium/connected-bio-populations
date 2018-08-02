@@ -54,7 +54,6 @@ EnvironmentView.prototype.addMouseHandlers = () ->
       @environment.send evt.type, evt
 
 window.model =
-  brownness: 0
   checkParams: ->
     envParam = @getURLParam('envs', true)
     @envColors = if envParam then envParam else ['white']
@@ -143,8 +142,10 @@ window.model =
     env.addRule new Rule
       action: (agent) =>
         if agent.species is rabbitSpecies
-          envIndex = @getAgentEnvironmentIndex(agent)
-          brownness = @envColors[envIndex] == 'brown'
+          brownness = switch @envColors[@getAgentEnvironmentIndex(agent)]
+            when 'white' then 0
+            when 'neutral' then .5
+            when 'brown' then 1
           if agent.get('color') is 'brown'
             agent.set 'chance of being seen', (0.6 - (brownness*0.6))
           else
@@ -261,11 +262,12 @@ window.model =
 
   setupGraphs: ->
     @graphData = {}
+    @graphZooms = @envColors.map(() -> 'recent')
 
     if @shownGraphs.indexOf('graph-colors') > -1
       @createGraphForEnvs(
         "Mouse Colors", 
-        "Time",
+        "Time (Days)",
         "Number of Mice",
         [
           [153, 153, 153]
@@ -287,7 +289,7 @@ window.model =
     if @shownGraphs.indexOf('graph-genotypes') > -1
       @createGraphForEnvs(
         "Mouse Genotypes", 
-        "Time",
+        "Time (Days)",
         "% of Mice",
         [
           [242, 203, 124] #bb
@@ -311,7 +313,7 @@ window.model =
     if @shownGraphs.indexOf('graph-alleles') > -1
       @createGraphForEnvs(
         "Mouse Alleles", 
-        "Time",
+        "Time (Days)",
         "% of Alleles",
         [
           [153, 153, 153]
@@ -351,16 +353,24 @@ window.model =
       sampleInterval: (Environment.DEFAULT_RUN_LOOP_DELAY/1000)
       dataType: 'samples'
       dataColors: colors
+      enableAutoScaleButton: false
 
-    updateWindow = (graph) =>
-      # Pan the graph window every 5 seconds
-      pointsPerWindow = (5 * 1000) / Environment.DEFAULT_RUN_LOOP_DELAY
-      # Subtract 1 from the window since the first scroll isn't actually till 10 seconds
-      windowNum = Math.max(0, Math.floor(graph.numberOfPoints() / pointsPerWindow) - 1)
-      graph.xmin(windowNum * 5)
-      graph.xmax(graph.xmin() + 10)
-      graph.ymin(0)
-      graph.ymax(100)
+    updateWindow = (graph, zoomType) =>
+      if (zoomType == 'recent')
+        # Pan the graph window every 5 seconds
+        pointsPerWindow = (5 * 1000) / Environment.DEFAULT_RUN_LOOP_DELAY
+        # Subtract 1 from the window since the first scroll isn't actually till 10 seconds
+        windowNum = Math.max(0, Math.floor(graph.numberOfPoints() / pointsPerWindow) - 1)
+        graph.xmin(windowNum * 5)
+        graph.xmax(graph.xmin() + 10)
+        graph.ymin(0)
+        graph.ymax(105)
+      else
+        pointsPerSecond = 1000 / Environment.DEFAULT_RUN_LOOP_DELAY
+        graph.xmin(0)
+        graph.xmax(Math.max(1, graph.numberOfPoints() / pointsPerSecond))
+        graph.ymin(0)
+        graph.ymax(105)
 
     @graphData[showButton] = {}
       
@@ -371,15 +381,30 @@ window.model =
         graph = null
         that.graphData[showButton][i] = []
 
-        # Construct/destroy the graph on button clicks
+        zoomButton = document.createElement("button")
+        zoomButton.className = "autoscale-button"
+        zoomButton.textContent = "Show all data"
+        zoomButton.addEventListener("click", () => 
+          if (that.graphZooms[i] == 'all')
+            zoomButton.textContent = "Show all data"
+            that.graphZooms[i] = 'recent'
+          else
+            zoomButton.textContent = "Show recent data"
+            that.graphZooms[i] = 'all'
+          updateWindow(graph, that.graphZooms[i])
+        )
+
+        # Destroy and re-create the graph on button clicks
         document.getElementById(showButton).addEventListener("click", () =>
-          currGraph = document.getElementById("graph-container-" + i)
-          if (currGraph)
-            currGraph.remove()
+          currentDiv = document.getElementById("graph-container-" + i)
+          if (currentDiv)
+            currentDiv.remove()
 
           containerDiv = document.createElement("div")
           containerDiv.id = "graph-container-" + i
           document.getElementById("graphs").appendChild(containerDiv)
+
+          containerDiv.appendChild(zoomButton)
 
           # Construct the graph
           graphDiv = document.createElement("div")
@@ -402,7 +427,7 @@ window.model =
             seriesDiv.appendChild(seriesText)
             containerDiv.appendChild(seriesDiv)
           )
-          updateWindow(graph)
+          updateWindow(graph, that.graphZooms[i])
         )
         hideButtons.forEach((buttonId) => 
           document.getElementById(buttonId).addEventListener("click", () => graph = null)
@@ -412,13 +437,13 @@ window.model =
           that.graphData[showButton][i] = []
           if (graph)
             graph.reset()
-            updateWindow(graph)
+            updateWindow(graph, that.graphZooms[i])
 
         Events.addEventListener Environment.EVENTS.STEP, =>
           that.graphData[showButton][i].push(counter.call(that, that.locations.fields[i]))
           if (graph)
             graph.addSamples counter.call(that, that.locations.fields[i])
-            updateWindow(graph)
+            updateWindow(graph, that.graphZooms[i])
 
   agentsOfSpecies: (species)->
     set = []
@@ -479,6 +504,9 @@ window.model =
     switchButton.onclick = =>
       if @envColors.length == 1
         if @envColors[0] == "white"
+          @envColors[0] = "neutral"
+          @env.setBackground("images/environments/neutral.png")
+        else if @envColors[0] == "neutral"
           @envColors[0] = "brown"
           @env.setBackground("images/environments/brown.png")
         else
@@ -554,7 +582,7 @@ window.model =
 
     if @addedRabbits and @numRabbits < 5
       for i in [0...4]
-        @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)])
+        @addAgent(@rabbitSpecies, [], [@copyRandomColorTrait(allRabbits)], location)
 
     # If there are no specific selective pressures (ie there are no hawks, or the hawks eat 
     # everything with equal probability), the population should be 'stabilized', so that no
@@ -579,6 +607,15 @@ window.model =
     # As there are more rabbits, it takes longer for rabbits to reproduce
     # Once there are 50 rabbits, they will stop reproducing entirely
     @setProperty(allRabbits, "mating chance", -.005 * @numRabbits + .25)
+
+    if @addedRabbits and @addedHawks
+        that = @
+        allRabbits.forEach((rabbit) -> 
+          if (rabbit.get('color') != that.envColors[location.index])
+            # When rats are getting preyed on, there should be less of them
+            # Reduce their carrying capacity here to accomplish that
+            rabbit.set('mating chance', -.005 * that.numRabbits + .22)
+        )
 
   # Returns a random color trait, selecting from rabbits currently on screen
   copyRandomColorTrait: (allRabbits) ->
