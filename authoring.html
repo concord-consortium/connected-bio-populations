@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="authoring.js"></script>
+    <style type="text/css">
+      #url {
+        width: 1000px;
+      }
+      body {
+        font-family:Open Sans,Arial;
+        color:#454545;
+        font-size:16px;
+        margin:2em auto;
+        max-width:800px;
+        padding:1em;
+        line-height:1.5;
+        text-align:justify;
+      }
+      legend {
+        color: #999;
+        font-size: 0.9em;
+      }
+      fieldset {
+        border-color: #DDD;
+      }
+      
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <legend>Environments</legend>
+      <div id="envs">Environment colors:
+        <select id="env-1">
+          <option value="white">White</option>
+          <option value="neutral">Neutral</option>
+          <option value="brown">Brown</option>
+        </select>
+        <select id="env-2">
+          <option value="none">None</option>
+          <option value="white">White</option>
+          <option value="neutral">Neutral</option>
+          <option value="brown">Brown</option>
+        </select>
+      </div>
+      <div id="switch-box">
+        <label>
+          <input type="checkbox" id="switch">Show "Switch environments" button
+        </label>
+      </div>
+      <div id="include-neutral-box">
+        <label>
+          <input type="checkbox" id="showNeutral" checked="true">Include neutral environment when switching
+        </label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Toolbar2</legend>
+      <div id="carry-box">
+        <label>
+          <input type="checkbox" id="carryTool" checked="true">Show "Carry tool"
+        </label>
+      </div>
+      <div id="info-tool-box">
+        <label>
+          <input type="checkbox" id="infoTool" checked="true">Show "Info tool" (Genotype display)
+        </label>
+      </div>
+      <div id="hetero-box">
+        <label>
+          <input type="checkbox" id="hetero" checked="true">Show "show heterozygotes" checkbox
+        </label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Populations</legend>
+      <div id="pop-control">
+        <label>
+          <input type="radio" id="author-control" name="pop-control" checked="true" value="author">Author population control
+        </label>
+        <label>
+          <input type="radio" id="user-control" name="pop-control" value="user">User population control
+        </label>
+      </div>
+      <div id="control-type">
+        <label>
+          <input type="radio" id="color-control" name="control-type" checked="true" value="color">Control population colors
+        </label>
+        <label>
+          <input type="radio" id="genotype-control" name="control-type" value="genotype">Control population genotypes
+        </label>
+      </div>
+      <div id="color-controls">
+        <label>Percent brown
+          <input type="text" id="percent-brown" value="75">
+        </label>
+      </div>
+      <div id="genotype-controls" hidden="true">
+        <label>Percent BB
+          <input type="text" id="percentBB" value="38">
+        </label>
+        <label>Percent Bb
+          <input type="text" id="percentBb" value="38">
+        </label>
+      </div>
+      <div id="hawks-control">
+        <label>
+          <input type="checkbox" id="showNumHawks">Show slider for number of hawks (1-4)
+        </label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Graphs</legend>
+      <div id="show-graphs">
+        <label>
+          <input type="checkbox" id="show-color-graphs">Hide Color Graphs
+        </label>
+        <label>
+          <input type="checkbox" id="show-genotype-graphs">Hide Genotype Graphs
+        </label>
+        <label>
+          <input type="checkbox" id="show-allele-graphs">Hide Allele Graphs
+        </label>
+      </div>
+    </fieldset>
+    <input id="url" type="text">
+  </body>
+</html>
