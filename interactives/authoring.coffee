@@ -1,11 +1,13 @@
-helpers     = require 'helpers'
-
 window.onload = ->
   params = {}
   env1 = document.getElementById("env-1")
   env2 = document.getElementById("env-2")
   showSwitch = document.getElementById("switch")
   showCarryTool = document.getElementById("carryTool")
+  showInfoTool = document.getElementById("infoTool")
+  showNeutral = document.getElementById("showNeutral")
+  showHetero = document.getElementById("hetero")
+  showNumHawks = document.getElementById("showNumHawks")
   authorControl = document.getElementById("author-control")
   userControl = document.getElementById("user-control")
   colorControl = document.getElementById("color-control")
@@ -17,7 +19,7 @@ window.onload = ->
   percentBb = document.getElementById("percentBb")
 
   updateUrl = () ->
-    url = "https://concord-consortium.github.io/connected-bio-populations/hawk-rabbit-combo.html?"
+    url = "https://concord-consortium.github.io/cb-populations/?"
     strParams = []
     for key in Object.keys(params)
       strParams.push(key + "=" + params[key])
@@ -27,7 +29,7 @@ window.onload = ->
   forceCheck = (elem, check) ->
     elem.checked = check
     elem.onchange()
-    
+
   setEnvs = () ->
     envs = env1.value
     if env2.value == "none"
@@ -41,11 +43,24 @@ window.onload = ->
   env1.onchange = setEnvs
   env2.onchange = setEnvs
 
-  setCheckbox = (e) ->
-    params[e.target.id] = e.target.checked
+  showSwitch.onchange = () ->
+    params.switch = showSwitch.checked
     updateUrl()
-  showSwitch.onchange = setCheckbox
-  carryTool.onchange = setCheckbox
+  carryTool.onchange = () ->
+    params.carryTool = showCarryTool.checked
+    updateUrl()
+  showInfoTool.onchange = () ->
+    params.hideInfoTool = !showInfoTool.checked
+    updateUrl()
+  hetero.onchange = () ->
+    params.hideHeteroCheck = !hetero.checked
+    updateUrl()
+  showNeutral.onchange = () ->
+    params.showNeutral = showNeutral.checked
+    updateUrl()
+  showNumHawks.onchange = () ->
+    params.showNumHawks = showNumHawks.checked
+    updateUrl()
 
   setPopControl = (e) ->
     controller = e.target.value

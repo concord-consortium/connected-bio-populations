@@ -2,56 +2,115 @@ include includes/_helpers
 doctype html
 html
   head
-    include includes/shared-headers
-    include includes/shared-css
-    include includes/shared-js
-    include includes/shared-graph
-
     +script(src="authoring.js")
     style(type="text/css").
       #url {
-        width: 1000px
+        width: 1000px;
+      }
+      body {
+        font-family:Open Sans,Arial;
+        color:#454545;
+        font-size:16px;
+        margin:2em auto;
+        max-width:800px;
+        padding:1em;
+        line-height:1.5;
+        text-align:justify;
+      }
+      legend {
+        color: #999;
+        font-size: 0.9em;
+      }
+      fieldset {
+        border-color: #DDD;
       }
 
   body
-    div(id="envs")
-      | Environment colors: 
-      select(id="env-1")
-        option(value="white") White
-        option(value="brown") Brown
-      select(id="env-2")
-        option(value="none") None
-        option(value="white") White
-        option(value="brown") Brown
-    div(id="switch-box")
-      | Show "Switch environments" button
-      input(type="checkbox", id="switch")
-    div(id="carry-box")
-      | Show "Carry tool"
-      input(type="checkbox", id="carryTool", checked="true")
-    div(id="pop-control")
-      | Author population control
-      input(type="radio", id="author-control" name="pop-control", checked="true", value="author")
-      | User population control
-      input(type="radio", id="user-control" name="pop-control", value="user")
-    div(id="control-type")
-      | Control population colors
-      input(type="radio", id="color-control" name="control-type", checked="true", value="color")
-      | Control population genotypes
-      input(type="radio", id="genotype-control" name="control-type", value="genotype")
-    div(id="color-controls")
-      | Percent brown
-      input(type="text", id="percent-brown", value="75")
-    div(id="genotype-controls", hidden="true")
-      | Percent BB
-      input(type="text", id="percentBB", value="38")
-      | Percent Bb
-      input(type="text", id="percentBb", value="38")
-    div(id="show-graphs")
-      | Hide Color Graphs
-      input(type="checkbox", id="show-color-graphs")
-      | Hide Genotype Graphs
-      input(type="checkbox", id="show-genotype-graphs")
-      | Hide Allele Graphs
-      input(type="checkbox", id="show-allele-graphs")
+    fieldset
+      legend
+        | Environments
+      div(id="envs")
+        | Environment colors:
+        select(id="env-1")
+          option(value="white") White
+          option(value="neutral") Neutral
+          option(value="brown") Brown
+        select(id="env-2")
+          option(value="none") None
+          option(value="white") White
+          option(value="neutral") Neutral
+          option(value="brown") Brown
+      div(id="switch-box")
+        label
+          input(type="checkbox", id="switch")
+          | Show "Switch environments" button
+      div(id="include-neutral-box")
+        label
+          input(type="checkbox", id="showNeutral", checked="true")
+          | Include neutral environment when switching
+
+    fieldset
+      legend
+        | Toolbar2
+      div(id="carry-box")
+        label
+          input(type="checkbox", id="carryTool", checked="true")
+          | Show "Carry tool"
+      div(id="info-tool-box")
+        label
+          input(type="checkbox", id="infoTool", checked="true")
+          | Show "Info tool" (Genotype display)
+      div(id="hetero-box")
+        label
+          input(type="checkbox", id="hetero", checked="true")
+          | Show "show heterozygotes" checkbox
+
+    fieldset
+      legend
+        | Populations
+      div(id="pop-control")
+        label
+          input(type="radio", id="author-control" name="pop-control", checked="true", value="author")
+          | Author population control
+        label
+          input(type="radio", id="user-control" name="pop-control", value="user")
+          | User population control
+      div(id="control-type")
+        label
+          input(type="radio", id="color-control" name="control-type", checked="true", value="color")
+          | Control population colors
+        label
+          input(type="radio", id="genotype-control" name="control-type", value="genotype")
+          | Control population genotypes
+      div(id="color-controls")
+        label
+          | Percent brown
+          input(type="text", id="percent-brown", value="75")
+      div(id="genotype-controls", hidden="true")
+        label
+          | Percent BB
+          input(type="text", id="percentBB", value="38")
+        label
+          | Percent Bb
+          input(type="text", id="percentBb", value="38")
+      div(id="hawks-control")
+        label
+          input(type="checkbox", id="showNumHawks")
+          | Show slider for number of hawks (1-4)
+
+
+    fieldset
+      legend
+        | Graphs
+      div(id="show-graphs")
+        label
+          input(type="checkbox", id="show-color-graphs")
+          | Hide Color Graphs
+        label
+          input(type="checkbox", id="show-genotype-graphs")
+          | Hide Genotype Graphs
+        label
+          input(type="checkbox", id="show-allele-graphs")
+          | Hide Allele Graphs
+
     input(id="url", type="text")
